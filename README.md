@@ -1,6 +1,5 @@
 # UniHire
 
-# UniHire
 *Helping university students find their first professional opportunities through skill-based job matching.*
 
 ---
