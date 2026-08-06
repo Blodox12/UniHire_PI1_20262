@@ -1,4 +1,6 @@
 # UniHire
+
+# UniHire
 *Helping university students find their first professional opportunities through skill-based job matching.*
 
 ---
@@ -43,6 +45,38 @@ The system shall allow companies to create, edit, and manage internship and entr
 FR-04. Job Recommendation and Application
 The system shall recommend job opportunities to students based on the compatibility between their profiles and the job requirements, allowing them to apply directly through the platform.
 
+FR-05. Job Search and Filtering
+
+The system shall allow students to search and filter job opportunities by location, job category, required skills, and work modality.
+
+FR-06. Resume Upload
+
+The system shall allow students to upload and update their resume in PDF format.
+
+FR-07. Application Tracking
+
+The system shall allow students to view the status of their job applications (e.g., Submitted, Under Review, Accepted, or Rejected).
+
+FR-08. Applicant Management
+
+The system shall allow companies to review the profiles and resumes of students who have applied for their job postings.
+
+FR-09. Notifications
+
+The system shall notify students when new job opportunities match their profiles or when the status of an application changes.
+
+FR-10. Profile Editing
+
+The system shall allow both students and companies to edit and update their personal or organizational information at any time.
+
+FR-11. Password Recovery
+
+The system shall provide users with a password recovery feature through email verification.
+
+FR-12. Job Post Deletion
+
+The system shall allow companies to edit or delete their published job opportunities.
+
 2. Non-Functional Requirements (NFR)
 
 NFR-01. Performance
@@ -56,3 +90,35 @@ The platform shall maintain an availability of at least 99%, excluding scheduled
 
 NFR-04. Usability
 The system shall provide an intuitive and responsive user interface, ensuring compatibility with desktop computers, tablets, and mobile devices.
+
+NFR-05. Scalability
+
+The system shall support at least 1,000 concurrent users without significant degradation in performance.
+
+NFR-06. Browser Compatibility
+
+The system shall be fully compatible with the latest versions of Google Chrome, Mozilla Firefox, Microsoft Edge, and Safari.
+
+NFR-07. Data Integrity
+
+The system shall ensure the consistency and integrity of user and job data during all database transactions.
+
+NFR-08. Maintainability
+
+The system shall be developed using a modular architecture to facilitate maintenance, debugging, and future enhancements.
+
+NFR-09. Backup
+
+The system shall perform automatic database backups at least once every 24 hours.
+
+NFR-10. Accessibility
+
+The system shall comply with the WCAG 2.1 Level AA accessibility guidelines to ensure usability for people with disabilities.
+
+NFR-11. Reliability
+
+The system shall recover from unexpected failures without losing previously stored user information.
+
+NFR-12. Privacy
+
+The system shall ensure that users' personal information is only accessible to authorized users in accordance with applicable data protection regulations.

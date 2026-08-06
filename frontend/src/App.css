@@ -1,0 +1,24 @@
+.dashboard-shell {
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+  margin-bottom: 1rem;
+}
+
+.empty-state {
+  color: #64748b;
+  padding: 1rem 0;
+}
+
+.list-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  margin-bottom: 0.75rem;
+}
