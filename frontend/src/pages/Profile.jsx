@@ -18,18 +18,23 @@ function Profile() {
   useEffect(() => {
     const loadProfile = async () => {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setForm({
-        name: data.student.name || '',
-        university: data.student.university || '',
-        career: data.student.career || '',
-        semester: data.student.semester || '',
-        skills: data.student.skills || '',
-        certifications: data.student.certifications || '',
-        resume_filename: data.student.resume_filename || ''
-      });
+      try {
+        const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setForm({
+          name: data.student?.name || '',
+          university: data.student?.university || '',
+          career: data.student?.career || '',
+          semester: data.student?.semester || '',
+          skills: data.student?.skills || '',
+          certifications: data.student?.certifications || '',
+          resume_filename: data.student?.resume_filename || ''
+        });
+      } catch (err) {
+        setMessage(err.response?.data?.message || 'Profile not found. Complete your profile to continue.');
+      }
     };
     loadProfile();
   }, []);
