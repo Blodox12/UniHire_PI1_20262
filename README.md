@@ -64,7 +64,7 @@ Open `http://localhost:5173`. The frontend uses `VITE_API_URL` when defined; oth
 
 ## End-to-end evidence
 
-The automated test uses a temporary SQLite database and executes the main flow: student registration, login, JWT authentication, API status, job listing, and protected profile access.
+The automated tests use a temporary SQLite database and cover student and company registration, login, JWT authentication, duplicate emails, input validation, API status, job listing, and protected profile access.
 
 ```powershell
 cd backend
@@ -74,8 +74,10 @@ python -m unittest test_api.py -v
 Verified result:
 
 ```text
+test_company_registration_and_duplicate_email ... ok
+test_registration_rejects_weak_password_and_invalid_email ... ok
 test_student_registration_login_and_application_flow ... ok
-Ran 1 test
+Ran 3 tests
 OK
 ```
 

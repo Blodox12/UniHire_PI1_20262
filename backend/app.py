@@ -125,9 +125,15 @@ def status():
 @app.post("/api/auth/register")
 def register():
     data = request.get_json(silent=True) or {}
-    role, email, password = data.get("role"), data.get("email"), data.get("password")
+    role = data.get("role")
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
     if not role or not email or not password:
         return jsonify(message="Missing required fields"), 400
+    if "@" not in email:
+        return jsonify(message="Invalid email"), 400
+    if len(password) < 6:
+        return jsonify(message="Password must contain at least 6 characters"), 400
     if query_one("SELECT id FROM students WHERE email = ?", (email,)) or query_one("SELECT id FROM companies WHERE email = ?", (email,)):
         return jsonify(message="User already exists"), 400
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()

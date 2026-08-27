@@ -36,6 +36,30 @@ class ApiFlowTest(unittest.TestCase):
         self.assertEqual(self.client.get("/api/jobs").get_json()["jobs"], [])
         self.assertEqual(self.client.get("/api/students/profile", headers={"Authorization": f"Bearer {token}"}).status_code, 200)
 
+    def test_company_registration_and_duplicate_email(self):
+        response = self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "Acme", "email": "ACME@TEST.COM",
+            "password": "secret"
+        })
+        self.assertEqual(response.status_code, 201)
+        response = self.client.post("/api/auth/login", json={
+            "role": "company", "email": "acme@test.com", "password": "secret"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["user"]["name"], "Acme")
+        response = self.client.post("/api/auth/register", json={
+            "role": "student", "name": "Another", "email": "acme@test.com",
+            "password": "secret", "university": "Uni", "career": "Design", "semester": "2"
+        })
+        self.assertEqual(response.status_code, 400)
+
+    def test_registration_rejects_weak_password_and_invalid_email(self):
+        response = self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "Acme", "email": "invalid",
+            "password": "123"
+        })
+        self.assertEqual(response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -19,11 +19,15 @@ function Register() {
     companyName: ''
   });
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     try {
+      setIsSubmitting(true);
+      setMessage('');
       await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/register`, {
         role,
         name: role === 'student' ? form.name : form.companyName,
@@ -41,6 +45,8 @@ function Register() {
       setTimeout(() => navigate('/login'), 800);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -112,7 +118,9 @@ function Register() {
                   </div>
                 </>
               )}
-              <button className="btn btn-primary" type="submit">Create Account</button>
+              <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating account...' : 'Create Account'}
+              </button>
             </form>
             <p style={{ marginTop: '1rem' }}>
               Already have an account? <Link to="/login">Login</Link>
