@@ -34,6 +34,7 @@ function App() {
       <Route path="/profile" element={<ProtectedRoute role="student"><Profile /></ProtectedRoute>} />
       <Route path="/recommended-jobs" element={<ProtectedRoute role="student"><RecommendedJobs /></ProtectedRoute>} />
       <Route path="/create-job" element={<ProtectedRoute role="company"><CreateJob /></ProtectedRoute>} />
+      <Route path="/edit-job/:jobId" element={<ProtectedRoute role="company"><CreateJob /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

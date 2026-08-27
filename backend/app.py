@@ -155,7 +155,9 @@ def register():
 @app.post("/api/auth/login")
 def login():
     data = request.get_json(silent=True) or {}
-    role, email, password = data.get("role"), data.get("email"), data.get("password")
+    role = data.get("role")
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
     if not role or not email or not password:
         return jsonify(message="Missing required fields"), 400
     if role == "student":
@@ -246,7 +248,10 @@ def update_job(job_id):
     if not query_one("SELECT id FROM jobs WHERE id=? AND company_id=?", (job_id, g.user["id"])):
         return jsonify(message="Job not found"), 404
     data = request.get_json(silent=True) or {}
-    execute("UPDATE jobs SET title=?,description=?,required_skills=?,location=?,job_type=? WHERE id=?", tuple(data.get(key) for key in ("title", "description", "required_skills", "location", "job_type")) + (job_id,))
+    required = [data.get(key) for key in ("title", "description", "required_skills", "location")]
+    if not all(required):
+        return jsonify(message="Missing job fields"), 400
+    execute("UPDATE jobs SET title=?,description=?,required_skills=?,location=?,job_type=? WHERE id=?", (*required, data.get("job_type", "Remote"), job_id))
     return jsonify(message="Job updated successfully")
 
 

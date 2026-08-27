@@ -34,7 +34,14 @@ class ApiFlowTest(unittest.TestCase):
         token = response.get_json()["token"]
         self.assertEqual(self.client.get("/api/status").get_json()["status"], "ok")
         self.assertEqual(self.client.get("/api/jobs").get_json()["jobs"], [])
-        self.assertEqual(self.client.get("/api/students/profile", headers={"Authorization": f"Bearer {token}"}).status_code, 200)
+        profile_headers = {"Authorization": f"Bearer {token}"}
+        self.assertEqual(self.client.get("/api/students/profile", headers=profile_headers).status_code, 200)
+        response = self.client.put("/api/students/profile", headers=profile_headers, json={
+            "name": "Ana Updated", "university": "Uni", "career": "Software",
+            "semester": "7", "skills": "Python, Flask"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["student"]["name"], "Ana Updated")
 
     def test_company_registration_and_duplicate_email(self):
         response = self.client.post("/api/auth/register", json={
@@ -59,6 +66,31 @@ class ApiFlowTest(unittest.TestCase):
             "password": "123"
         })
         self.assertEqual(response.status_code, 400)
+
+    def test_company_can_create_update_and_delete_own_job(self):
+        self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "Acme", "email": "acme@test.com", "password": "secret"
+        })
+        login = self.client.post("/api/auth/login", json={
+            "role": "company", "email": " ACME@TEST.COM ", "password": "secret"
+        })
+        token = login.get_json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        response = self.client.post("/api/jobs", headers=headers, json={
+            "title": "Junior Python Developer", "description": "Build APIs",
+            "required_skills": "Python, SQL", "location": "Remote", "job_type": "Remote"
+        })
+        self.assertEqual(response.status_code, 201)
+        job_id = self.client.get("/api/companies/jobs", headers=headers).get_json()["jobs"][0]["id"]
+        response = self.client.put(f"/api/jobs/{job_id}", headers=headers, json={
+            "title": "Python Developer", "description": "Build Flask APIs",
+            "required_skills": "Python, Flask", "location": "Bogota", "job_type": "Hybrid"
+        })
+        self.assertEqual(response.status_code, 200)
+        updated = self.client.get("/api/jobs").get_json()["jobs"][0]
+        self.assertEqual(updated["title"], "Python Developer")
+        self.assertEqual(self.client.delete(f"/api/jobs/{job_id}", headers=headers).status_code, 200)
+        self.assertEqual(self.client.get("/api/jobs").get_json()["jobs"], [])
 
 
 if __name__ == "__main__":

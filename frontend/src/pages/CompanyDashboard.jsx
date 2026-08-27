@@ -58,7 +58,10 @@ function CompanyDashboard() {
                   <div key={job.id} className="list-item">
                     <strong>{job.title}</strong>
                     <p>{job.description}</p>
-                    <button className="btn btn-secondary" onClick={() => handleDelete(job.id)}>Delete</button>
+                    <div className="hero-actions">
+                      <Link to={`/edit-job/${job.id}`} className="btn btn-secondary">Edit</Link>
+                      <button className="btn btn-secondary" onClick={() => handleDelete(job.id)}>Delete</button>
+                    </div>
                   </div>
                 ))}
               </div>

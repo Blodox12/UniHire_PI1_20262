@@ -8,12 +8,15 @@ function Login() {
   const [role, setRole] = useState('student');
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
     try {
+      setIsSubmitting(true);
       const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/login`, {
         role,
         email: form.email,
@@ -25,6 +28,8 @@ function Login() {
       navigate(data.user.role === 'company' ? '/company-dashboard' : '/student-dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -43,13 +48,15 @@ function Login() {
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Email</label>
-                <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
               </div>
               <div className="form-group">
                 <label>Password</label>
                 <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
               </div>
-              <button className="btn btn-primary" type="submit">Login</button>
+              <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Signing in...' : 'Login'}
+              </button>
             </form>
             <p style={{ marginTop: '1rem' }}>
               No account yet? <Link to="/register">Register</Link>
