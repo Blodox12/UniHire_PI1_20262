@@ -74,10 +74,12 @@ python -m unittest test_api.py -v
 Verified result:
 
 ```text
+test_company_can_create_update_and_delete_own_job ... ok
 test_company_registration_and_duplicate_email ... ok
+test_job_detail_endpoint ... ok
 test_registration_rejects_weak_password_and_invalid_email ... ok
 test_student_registration_login_and_application_flow ... ok
-Ran 3 tests
+Ran 5 tests
 OK
 ```
 

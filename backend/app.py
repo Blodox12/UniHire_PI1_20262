@@ -216,6 +216,14 @@ def jobs():
     return jsonify(jobs=[row_dict(row) for row in query_all("SELECT * FROM jobs ORDER BY id DESC")])
 
 
+@app.get("/api/jobs/<int:job_id>")
+def job_detail(job_id):
+    job = query_one("SELECT j.*, c.company_name FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.id = ?", (job_id,))
+    if not job:
+        return jsonify(message="Job not found"), 404
+    return jsonify(job=row_dict(job))
+
+
 @app.get("/api/jobs/recommended")
 @protect("student")
 def recommended_jobs():

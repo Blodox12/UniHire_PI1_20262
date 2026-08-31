@@ -9,6 +9,7 @@ import CompanyDashboard from './pages/CompanyDashboard';
 import Profile from './pages/Profile';
 import CreateJob from './pages/CreateJob';
 import RecommendedJobs from './pages/RecommendedJobs';
+import JobDetail from './pages/JobDetail';
 
 function ProtectedRoute({ children, role }) {
   const token = localStorage.getItem('token');
@@ -33,6 +34,7 @@ function App() {
       <Route path="/company-dashboard" element={<ProtectedRoute role="company"><CompanyDashboard /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute role="student"><Profile /></ProtectedRoute>} />
       <Route path="/recommended-jobs" element={<ProtectedRoute role="student"><RecommendedJobs /></ProtectedRoute>} />
+      <Route path="/job/:jobId" element={<JobDetail />} />
       <Route path="/create-job" element={<ProtectedRoute role="company"><CreateJob /></ProtectedRoute>} />
       <Route path="/edit-job/:jobId" element={<ProtectedRoute role="company"><CreateJob /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -43,6 +43,25 @@ class ApiFlowTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["student"]["name"], "Ana Updated")
 
+    def test_job_detail_endpoint(self):
+        self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "TechCorp", "email": "tech@test.com", "password": "secret"
+        })
+        login = self.client.post("/api/auth/login", json={
+            "role": "company", "email": "tech@test.com", "password": "secret"
+        })
+        token = login.get_json()["token"]
+        self.client.post("/api/jobs", headers={"Authorization": f"Bearer {token}"}, json={
+            "title": "Senior Python Dev", "description": "Lead backend team",
+            "required_skills": "Python, Leadership", "location": "NYC", "job_type": "On-site"
+        })
+        job_id = self.client.get("/api/jobs").get_json()["jobs"][0]["id"]
+        response = self.client.get(f"/api/jobs/{job_id}")
+        self.assertEqual(response.status_code, 200)
+        job = response.get_json()["job"]
+        self.assertEqual(job["title"], "Senior Python Dev")
+        self.assertEqual(job["company_name"], "TechCorp")
+
     def test_company_registration_and_duplicate_email(self):
         response = self.client.post("/api/auth/register", json={
             "role": "company", "companyName": "Acme", "email": "ACME@TEST.COM",

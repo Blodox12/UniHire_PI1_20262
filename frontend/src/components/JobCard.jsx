@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 function JobCard({ job, onApply, showApply = true }) {
   return (
     <article className="card job-card">
@@ -10,11 +12,14 @@ function JobCard({ job, onApply, showApply = true }) {
         <span>Skills: {job.required_skills}</span>
         <span>Location: {job.location}</span>
       </div>
-      {showApply && (
-        <button className="btn btn-primary" onClick={() => onApply(job.id)}>
-          Apply Now
-        </button>
-      )}
+      <div className="hero-actions">
+        <Link to={`/job/${job.id}`} className="btn btn-secondary">View Details</Link>
+        {showApply && (
+          <button className="btn btn-primary" onClick={() => onApply(job.id)}>
+            Apply Now
+          </button>
+        )}
+      </div>
     </article>
   );
 }
