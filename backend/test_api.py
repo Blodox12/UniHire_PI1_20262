@@ -62,6 +62,32 @@ class ApiFlowTest(unittest.TestCase):
         self.assertEqual(job["title"], "Senior Python Dev")
         self.assertEqual(job["company_name"], "TechCorp")
 
+    def test_job_search_and_filtering(self):
+        self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "DevCorp", "email": "dev@test.com", "password": "secret"
+        })
+        login = self.client.post("/api/auth/login", json={
+            "role": "company", "email": "dev@test.com", "password": "secret"
+        })
+        token = login.get_json()["token"]
+        self.client.post("/api/jobs", headers={"Authorization": f"Bearer {token}"}, json={
+            "title": "Python Backend Dev", "description": "Build APIs with Flask",
+            "required_skills": "Python, Flask, PostgreSQL", "location": "New York", "job_type": "Remote"
+        })
+        self.client.post("/api/jobs", headers={"Authorization": f"Bearer {token}"}, json={
+            "title": "React Frontend Dev", "description": "Build web interfaces",
+            "required_skills": "JavaScript, React", "location": "San Francisco", "job_type": "On-site"
+        })
+        response = self.client.get("/api/jobs/search?q=Python")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["count"], 1)
+        response = self.client.get("/api/jobs/search?job_type=Remote")
+        self.assertEqual(response.get_json()["count"], 1)
+        response = self.client.get("/api/jobs/search?location=San")
+        self.assertEqual(response.get_json()["count"], 1)
+        response = self.client.get("/api/jobs/search")
+        self.assertEqual(response.get_json()["count"], 2)
+
     def test_company_registration_and_duplicate_email(self):
         response = self.client.post("/api/auth/register", json={
             "role": "company", "companyName": "Acme", "email": "ACME@TEST.COM",

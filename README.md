@@ -77,9 +77,10 @@ Verified result:
 test_company_can_create_update_and_delete_own_job ... ok
 test_company_registration_and_duplicate_email ... ok
 test_job_detail_endpoint ... ok
+test_job_search_and_filtering ... ok
 test_registration_rejects_weak_password_and_invalid_email ... ok
 test_student_registration_login_and_application_flow ... ok
-Ran 5 tests
+Ran 6 tests
 OK
 ```
 

@@ -216,6 +216,23 @@ def jobs():
     return jsonify(jobs=[row_dict(row) for row in query_all("SELECT * FROM jobs ORDER BY id DESC")])
 
 
+@app.get("/api/jobs/search")
+def search_jobs():
+    q = (request.args.get("q") or "").strip().lower()
+    job_type = (request.args.get("job_type") or "").strip()
+    location = (request.args.get("location") or "").strip().lower()
+    rows = query_all("SELECT * FROM jobs ORDER BY id DESC")
+    results = []
+    for row in rows:
+        job = row_dict(row)
+        matches_q = not q or q in job["title"].lower() or q in job["description"].lower() or q in job["required_skills"].lower()
+        matches_type = not job_type or job["job_type"] == job_type
+        matches_loc = not location or location in job["location"].lower()
+        if matches_q and matches_type and matches_loc:
+            results.append(job)
+    return jsonify(jobs=results, count=len(results))
+
+
 @app.get("/api/jobs/<int:job_id>")
 def job_detail(job_id):
     job = query_one("SELECT j.*, c.company_name FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.id = ?", (job_id,))

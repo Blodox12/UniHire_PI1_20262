@@ -10,14 +10,28 @@ function Jobs() {
   const [jobType, setJobType] = useState('');
   const [location, setLocation] = useState('');
   const [message, setMessage] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    const loadJobs = async () => {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs`);
-      setJobs(data.jobs || []);
+    const performSearch = async () => {
+      setIsSearching(true);
+      try {
+        const params = new URLSearchParams();
+        if (search) params.append('q', search);
+        if (jobType) params.append('job_type', jobType);
+        if (location) params.append('location', location);
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/search?${params}` 
+        );
+        setJobs(data.jobs || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearching(false);
+      }
     };
-    loadJobs();
-  }, []);
+    performSearch();
+  }, [search, jobType, location]);
 
   const handleApply = async (jobId) => {
     const token = localStorage.getItem('token');
@@ -35,12 +49,11 @@ function Jobs() {
     }
   };
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = `${job.title} ${job.description} ${job.required_skills}`.toLowerCase().includes(search.toLowerCase());
-    const matchesType = jobType ? job.job_type === jobType : true;
-    const matchesLocation = location ? job.location.toLowerCase().includes(location.toLowerCase()) : true;
-    return matchesSearch && matchesType && matchesLocation;
-  });
+  const clearFilters = () => {
+    setSearch('');
+    setJobType('');
+    setLocation('');
+  };
 
   return (
     <>
@@ -70,8 +83,19 @@ function Jobs() {
                 <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City or country" />
               </div>
             </div>
+            {(search || jobType || location) && (
+              <button className="btn btn-secondary" onClick={clearFilters} style={{ marginTop: '0.5rem' }}>
+                Clear Filters
+              </button>
+            )}
           </div>
-          {filteredJobs.map((job) => (
+          <p style={{ color: '#666' }}>
+            {isSearching ? 'Searching...' : `Found ${jobs.length} job${jobs.length !== 1 ? 's' : ''}`}
+          </p>
+          {jobs.length === 0 && !isSearching && (
+            <p style={{ color: 'crimson', textAlign: 'center' }}>No jobs match your search. Try adjusting your filters.</p>
+          )}
+          {jobs.map((job) => (
             <JobCard key={job.id} job={job} onApply={handleApply} />
           ))}
         </div>
