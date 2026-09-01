@@ -137,6 +137,41 @@ class ApiFlowTest(unittest.TestCase):
         self.assertEqual(self.client.delete(f"/api/jobs/{job_id}", headers=headers).status_code, 200)
         self.assertEqual(self.client.get("/api/jobs").get_json()["jobs"], [])
 
+    def test_student_can_apply_to_job_and_view_applications(self):
+        self.client.post("/api/auth/register", json={
+            "role": "student", "name": "John", "university": "MIT", "career": "CS",
+            "semester": 4, "email": "student@test.com", "password": "secret123"
+        })
+        student_login = self.client.post("/api/auth/login", json={
+            "role": "student", "email": "student@test.com", "password": "secret123"
+        })
+        student_token = student_login.get_json()["token"]
+        self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "TechCo", "email": "company@test.com", "password": "secret123"
+        })
+        company_login = self.client.post("/api/auth/login", json={
+            "role": "company", "email": "company@test.com", "password": "secret123"
+        })
+        company_token = company_login.get_json()["token"]
+        job_response = self.client.post("/api/jobs", headers={"Authorization": f"Bearer {company_token}"}, json={
+            "title": "Software Engineer", "description": "Build great software",
+            "required_skills": "Python, JavaScript", "location": "San Francisco", "job_type": "Remote"
+        })
+        job_id = job_response.get_json()["job"]["id"]
+        apply_response = self.client.post("/api/applications", headers={"Authorization": f"Bearer {student_token}"}, json={"jobId": job_id})
+        self.assertEqual(apply_response.status_code, 201)
+        apps_response = self.client.get("/api/applications", headers={"Authorization": f"Bearer {student_token}"})
+        self.assertEqual(len(apps_response.get_json()["applications"]), 1)
+        app = apps_response.get_json()["applications"][0]
+        self.assertEqual(app["job_id"], job_id)
+        self.assertEqual(app["status"], "Pending")
+        company_apps = self.client.get("/api/applications/company", headers={"Authorization": f"Bearer {company_token}"})
+        self.assertEqual(len(company_apps.get_json()["applicants"]), 1)
+        duplicate_response = self.client.post("/api/applications", headers={"Authorization": f"Bearer {student_token}"}, json={"jobId": job_id})
+        self.assertEqual(duplicate_response.status_code, 400)
+        self.assertIn("already applied", duplicate_response.get_json()["message"].lower())
+
+
 
 if __name__ == "__main__":
     unittest.main()

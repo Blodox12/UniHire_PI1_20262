@@ -79,8 +79,9 @@ test_company_registration_and_duplicate_email ... ok
 test_job_detail_endpoint ... ok
 test_job_search_and_filtering ... ok
 test_registration_rejects_weak_password_and_invalid_email ... ok
+test_student_can_apply_to_job_and_view_applications ... ok
 test_student_registration_login_and_application_flow ... ok
-Ran 6 tests
+Ran 7 tests
 OK
 ```
 

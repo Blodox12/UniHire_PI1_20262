@@ -68,11 +68,17 @@ function CompanyDashboard() {
             )}
             {activeView === 'applicants' && (
               <div className="dashboard-card">
-                <h2>Applicants</h2>
+                <h2>Applicants ({applicants.length})</h2>
                 {applicants.length === 0 ? <p className="empty-state">No applicants yet.</p> : applicants.map((app) => (
                   <div key={app.id} className="list-item">
-                    <strong>{app.student_name}</strong>
-                    <p>{app.title} — {app.status}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>{app.student_name}</strong>
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>{app.title}</p>
+                        <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#999' }}>Applied: {new Date(app.applied_at).toLocaleDateString()}</p>
+                      </div>
+                      <span className="badge" style={{ background: app.status === 'Pending' ? '#ffa500' : app.status === 'Accepted' ? '#28a745' : '#dc3545' }}>{app.status}</span>
+                    </div>
                   </div>
                 ))}
               </div>

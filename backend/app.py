@@ -263,8 +263,10 @@ def create_job():
     required = [data.get(key) for key in ("title", "description", "required_skills", "location")]
     if not all(required):
         return jsonify(message="Missing job fields"), 400
-    execute("INSERT INTO jobs (company_id,title,description,required_skills,location,job_type) VALUES (?,?,?,?,?,?)", (g.user["id"], *required, data.get("job_type", "Remote")))
-    return jsonify(message="Job created successfully"), 201
+    cursor = execute("INSERT INTO jobs (company_id,title,description,required_skills,location,job_type) VALUES (?,?,?,?,?,?)", (g.user["id"], *required, data.get("job_type", "Remote")))
+    job_id = cursor.lastrowid
+    job = row_dict(query_one("SELECT * FROM jobs WHERE id=?", (job_id,)))
+    return jsonify(message="Job created successfully", job=job), 201
 
 
 @app.put("/api/jobs/<int:job_id>")
@@ -313,7 +315,7 @@ def apply_to_job():
 @app.get("/api/applications")
 @protect("student")
 def student_applications():
-    rows = query_all("SELECT a.id,a.status,a.applied_at,j.title,j.description FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.student_id=? ORDER BY a.id DESC", (g.user["id"],))
+    rows = query_all("SELECT a.id,a.status,a.applied_at,j.id AS job_id,j.title,j.description FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.student_id=? ORDER BY a.id DESC", (g.user["id"],))
     return jsonify(applications=[row_dict(row) for row in rows])
 
 

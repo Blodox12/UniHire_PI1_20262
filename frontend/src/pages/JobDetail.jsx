@@ -24,19 +24,22 @@ function JobDetail() {
       }
     };
     loadJob();
+  }, [jobId]);
+
+  useEffect(() => {
     if (token && role === 'student') {
       const checkApplication = async () => {
         try {
           const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          const applied = data.applications.some((app) => app.job_id === Number(jobId) || app.title === job?.title);
+          const applied = data.applications.some((app) => app.job_id === Number(jobId));
           setHasApplied(applied);
         } catch (_err) {}
       };
-      if (job) checkApplication();
+      checkApplication();
     }
-  }, [jobId, token, role, job?.title]);
+  }, [jobId, token, role]);
 
   const handleApply = async () => {
     if (!token) {
