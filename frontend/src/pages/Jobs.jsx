@@ -44,6 +44,8 @@ function Jobs() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Application submitted successfully.');
+      // mark job as applied locally so UI updates immediately
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, applied: true } : j)));
     } catch (err) {
       setMessage(err.response?.data?.message || 'Unable to submit application.');
     }
