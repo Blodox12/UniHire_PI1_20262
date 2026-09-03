@@ -15,6 +15,7 @@ function CreateJob() {
     job_type: 'Remote'
   });
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -51,16 +52,19 @@ function CreateJob() {
     const token = localStorage.getItem('token');
     try {
       setIsSubmitting(true);
-      setMessage('');
+        setMessage('');
+        setMessageType('');
       const method = isEditing ? 'put' : 'post';
       const url = isEditing ? `/api/jobs/${jobId}` : '/api/jobs';
       await axios[method](`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`, form, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMessage(isEditing ? 'Job updated successfully.' : 'Job posted successfully.');
+        setMessage(isEditing ? 'Job updated successfully.' : 'Job posted successfully.');
+        setMessageType('success');
       setTimeout(() => navigate('/company-dashboard'), 800);
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Unable to create job.');
+        setMessage(err.response?.data?.message || 'Unable to create job.');
+        setMessageType('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +77,9 @@ function CreateJob() {
         <div className="container">
           <div className="card form-card">
             <h2>{isEditing ? 'Edit Job' : 'Create Job'}</h2>
-            {message && <p style={{ color: 'green' }}>{message}</p>}
+            {message && (
+              <p style={{ color: messageType === 'error' ? 'red' : 'green' }}>{message}</p>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Title</label>

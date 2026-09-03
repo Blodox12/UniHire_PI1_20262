@@ -16,17 +16,37 @@ function StudentDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const loadData = async () => {
+      // load profile
       try {
-        const [profileRes, recommendedRes, applicationsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications`, { headers: { Authorization: `Bearer ${token}` } })
-        ]);
+        const profileRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, { headers: { Authorization: `Bearer ${token}` } });
         setProfile(profileRes.data.student);
-        setRecommendedJobs(recommendedRes.data.jobs || []);
-        setApplications(applicationsRes.data.applications || []);
       } catch (err) {
+        // fallback to localStorage user if available
+        const saved = localStorage.getItem('user');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.role === 'student') setProfile(parsed);
+          } catch (_e) {}
+        }
+        // show message but continue loading other pieces
         setMessage(err.response?.data?.message || 'Unable to load student information.');
+      }
+
+      // load recommended jobs
+      try {
+        const recommendedRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/recommended`, { headers: { Authorization: `Bearer ${token}` } });
+        setRecommendedJobs(recommendedRes.data.jobs || []);
+      } catch (_err) {
+        // ignore recommended failures silently
+      }
+
+      // load applications
+      try {
+        const applicationsRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications`, { headers: { Authorization: `Bearer ${token}` } });
+        setApplications(applicationsRes.data.applications || []);
+      } catch (_err) {
+        // ignore applications failures silently
       }
     };
     loadData();

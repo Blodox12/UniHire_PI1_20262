@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 function JobCard({ job, onApply, showApply = true }) {
+  const applied = job.applied || job.isApplied || job.hasApplied || false;
   return (
     <article className="card job-card">
       <div className="card-header">
@@ -15,9 +16,15 @@ function JobCard({ job, onApply, showApply = true }) {
       <div className="hero-actions">
         <Link to={`/job/${job.id}`} className="btn btn-secondary">View Details</Link>
         {showApply && (
-          <button className="btn btn-primary" onClick={() => onApply(job.id)}>
-            Apply Now
-          </button>
+          applied ? (
+            <button className="btn" disabled style={{ background: '#28a745', color: '#fff' }}>
+              ✓ Applied
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={() => onApply(job.id)}>
+              Apply Now
+            </button>
+          )
         )}
       </div>
     </article>

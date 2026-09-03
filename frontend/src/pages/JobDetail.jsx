@@ -119,8 +119,9 @@ function JobDetail() {
                   className="btn btn-primary"
                   onClick={handleApply}
                   disabled={isApplying || hasApplied}
+                  style={hasApplied ? { background: '#28a745', borderColor: '#28a745' } : {}}
                 >
-                  {isApplying ? 'Submitting...' : hasApplied ? 'Already Applied' : 'Apply Now'}
+                  {isApplying ? 'Submitting...' : hasApplied ? '✓ Applied' : 'Apply Now'}
                 </button>
               )}
             </div>
