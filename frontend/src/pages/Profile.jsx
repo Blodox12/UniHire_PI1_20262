@@ -14,6 +14,7 @@ function Profile() {
     resume_filename: ''
   });
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -41,14 +42,18 @@ function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     const token = localStorage.getItem('token');
     try {
+      setIsSubmitting(true);
       await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, form, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Profile updated successfully.');
     } catch (err) {
       setMessage(err.response?.data?.message || 'Profile update failed.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,7 +80,7 @@ function Profile() {
               </div>
               <div className="form-group">
                 <label>Semester</label>
-                <input value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} required />
+                <input type="number" min="1" max="20" value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} required />
               </div>
               <div className="form-group">
                 <label>Skills</label>
@@ -89,7 +94,7 @@ function Profile() {
                 <label>Resume Filename</label>
                 <input value={form.resume_filename} onChange={(e) => setForm({ ...form, resume_filename: e.target.value })} />
               </div>
-              <button className="btn btn-primary" type="submit">Save Profile</button>
+              <button className="btn btn-primary" type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Profile'}</button>
             </form>
           </div>
         </div>

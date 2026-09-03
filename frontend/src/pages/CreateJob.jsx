@@ -77,15 +77,15 @@ function CreateJob() {
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Title</label>
-                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+                <input maxLength="120" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
               </div>
               <div className="form-group">
                 <label>Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows="4" required />
+                <textarea maxLength="2000" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows="4" required />
               </div>
               <div className="form-group">
                 <label>Required Skills</label>
-                <input value={form.required_skills} onChange={(e) => setForm({ ...form, required_skills: e.target.value })} placeholder="React, SQL, UX" required />
+                <input maxLength="500" value={form.required_skills} onChange={(e) => setForm({ ...form, required_skills: e.target.value })} placeholder="React, SQL, UX" required />
               </div>
               <div className="form-group">
                 <label>Location</label>

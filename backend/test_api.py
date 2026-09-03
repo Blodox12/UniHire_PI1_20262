@@ -201,6 +201,13 @@ class ApiFlowTest(unittest.TestCase):
         company_apps = self.client.get("/api/applications/company", headers={"Authorization": f"Bearer {company_token}"})
         self.assertEqual(len(company_apps.get_json()["applicants"]), 1)
         application_id = company_apps.get_json()["applicants"][0]["id"]
+        self.assertEqual(self.client.get("/api/applications/company", headers={"Authorization": f"Bearer {student_token}"}).status_code, 403)
+        self.assertEqual(self.client.get("/api/applications", headers={"Authorization": f"Bearer {company_token}"}).status_code, 403)
+        invalid_status = self.client.put(
+            f"/api/applications/{application_id}/status",
+            headers={"Authorization": f"Bearer {company_token}"}, json={"status": "Interview"}
+        )
+        self.assertEqual(invalid_status.status_code, 400)
         status_response = self.client.put(
             f"/api/applications/{application_id}/status",
             headers={"Authorization": f"Bearer {company_token}"}, json={"status": "Accepted"}

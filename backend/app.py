@@ -1,4 +1,5 @@
 import os
+import re
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -88,6 +89,10 @@ def row_dict(row):
     return dict(row) if row else None
 
 
+def valid_email(email):
+    return bool(re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email))
+
+
 def token_for(user_id, role):
     return jwt.encode(
         {"id": user_id, "role": role, "exp": datetime.now(timezone.utc) + timedelta(days=7)},
@@ -131,7 +136,7 @@ def register():
     password = data.get("password") or ""
     if not role or not email or not password:
         return jsonify(message="Missing required fields"), 400
-    if "@" not in email:
+    if not valid_email(email):
         return jsonify(message="Invalid email"), 400
     if len(password) < 6:
         return jsonify(message="Password must contain at least 6 characters"), 400
@@ -139,9 +144,11 @@ def register():
         return jsonify(message="User already exists"), 400
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     if role == "student":
-        fields = [data.get(key, "") for key in ("name", "university", "career", "semester")]
+        fields = [str(data.get(key, "")).strip() for key in ("name", "university", "career", "semester")]
         if not all(fields):
             return jsonify(message="Student profile data is incomplete"), 400
+        if not fields[3].isdigit() or not 1 <= int(fields[3]) <= 20:
+            return jsonify(message="Semester must be a number between 1 and 20"), 400
         execute("INSERT INTO students (name,email,password,university,career,semester,skills,certifications,resume_filename) VALUES (?,?,?,?,?,?,?,?,?)", (fields[0], email, hashed, *fields[1:], data.get("skills", ""), data.get("certifications", ""), data.get("resume_filename", "")))
     elif role == "company":
         company_name = data.get("companyName") or data.get("name")
@@ -267,10 +274,13 @@ def recommended_jobs():
 @protect("company")
 def create_job():
     data = request.get_json(silent=True) or {}
-    required = [data.get(key) for key in ("title", "description", "required_skills", "location")]
+    required = [str(data.get(key, "")).strip() for key in ("title", "description", "required_skills", "location")]
     if not all(required):
         return jsonify(message="Missing job fields"), 400
-    cursor = execute("INSERT INTO jobs (company_id,title,description,required_skills,location,job_type) VALUES (?,?,?,?,?,?)", (g.user["id"], *required, data.get("job_type", "Remote")))
+    job_type = data.get("job_type", "Remote")
+    if job_type not in {"Remote", "Hybrid", "On-site"}:
+        return jsonify(message="Invalid job type"), 400
+    cursor = execute("INSERT INTO jobs (company_id,title,description,required_skills,location,job_type) VALUES (?,?,?,?,?,?)", (g.user["id"], *required, job_type))
     job_id = cursor.lastrowid
     job = row_dict(query_one("SELECT * FROM jobs WHERE id=?", (job_id,)))
     return jsonify(message="Job created successfully", job=job), 201
@@ -282,10 +292,13 @@ def update_job(job_id):
     if not query_one("SELECT id FROM jobs WHERE id=? AND company_id=?", (job_id, g.user["id"])):
         return jsonify(message="Job not found"), 404
     data = request.get_json(silent=True) or {}
-    required = [data.get(key) for key in ("title", "description", "required_skills", "location")]
+    required = [str(data.get(key, "")).strip() for key in ("title", "description", "required_skills", "location")]
     if not all(required):
         return jsonify(message="Missing job fields"), 400
-    execute("UPDATE jobs SET title=?,description=?,required_skills=?,location=?,job_type=? WHERE id=?", (*required, data.get("job_type", "Remote"), job_id))
+    job_type = data.get("job_type", "Remote")
+    if job_type not in {"Remote", "Hybrid", "On-site"}:
+        return jsonify(message="Invalid job type"), 400
+    execute("UPDATE jobs SET title=?,description=?,required_skills=?,location=?,job_type=? WHERE id=?", (*required, job_type, job_id))
     return jsonify(message="Job updated successfully")
 
 
@@ -309,7 +322,7 @@ def company_jobs():
 @protect("student")
 def apply_to_job():
     job_id = (request.get_json(silent=True) or {}).get("jobId")
-    if not job_id:
+    if isinstance(job_id, bool) or not isinstance(job_id, int) or job_id < 1:
         return jsonify(message="Job id is required"), 400
     if query_one("SELECT id FROM applications WHERE student_id=? AND job_id=?", (g.user["id"], job_id)):
         return jsonify(message="You already applied to this job"), 400

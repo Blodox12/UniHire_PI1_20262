@@ -71,11 +71,11 @@ function Register() {
                   </div>
                   <div className="form-group">
                     <label>Email</label>
-                    <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+                    <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
                   </div>
                   <div className="form-group">
                     <label>Password</label>
-                    <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+                    <input type="password" minLength="6" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
                   </div>
                   <div className="form-group">
                     <label>University</label>
@@ -87,7 +87,7 @@ function Register() {
                   </div>
                   <div className="form-group">
                     <label>Semester</label>
-                    <input value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} required />
+                    <input type="number" min="1" max="20" value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} required />
                   </div>
                   <div className="form-group">
                     <label>Skills</label>
@@ -110,11 +110,11 @@ function Register() {
                   </div>
                   <div className="form-group">
                     <label>Email</label>
-                    <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+                    <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
                   </div>
                   <div className="form-group">
                     <label>Password</label>
-                    <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+                    <input type="password" minLength="6" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
                   </div>
                 </>
               )}
