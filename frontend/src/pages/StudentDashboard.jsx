@@ -11,18 +11,23 @@ function StudentDashboard() {
   const [profile, setProfile] = useState(null);
   const [recommendedJobs, setRecommendedJobs] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const loadData = async () => {
-      const [profileRes, recommendedRes, applicationsRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications`, { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-      setProfile(profileRes.data.student);
-      setRecommendedJobs(recommendedRes.data.jobs || []);
-      setApplications(applicationsRes.data.applications || []);
+      try {
+        const [profileRes, recommendedRes, applicationsRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/students/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        setProfile(profileRes.data.student);
+        setRecommendedJobs(recommendedRes.data.jobs || []);
+        setApplications(applicationsRes.data.applications || []);
+      } catch (err) {
+        setMessage(err.response?.data?.message || 'Unable to load student information.');
+      }
     };
     loadData();
   }, []);
@@ -40,6 +45,7 @@ function StudentDashboard() {
             <Link to="/profile" className="btn btn-primary" style={{ display: 'inline-block', marginTop: '1rem' }}>Edit Profile</Link>
           </aside>
           <section>
+            {message && <p style={{ color: 'crimson' }}>{message}</p>}
             {activeView === 'profile' && profile && (
               <div className="dashboard-card">
                 <h2>Welcome, {profile.name}</h2>

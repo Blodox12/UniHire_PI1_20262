@@ -144,6 +144,35 @@ class ApiFlowTest(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 400)
 
+    def test_errors_validation_and_persistence(self):
+        self.assertEqual(self.client.get("/api/does-not-exist").status_code, 404)
+        self.assertEqual(self.client.get("/api/does-not-exist").get_json()["message"], "Resource not found")
+        self.assertEqual(self.client.get("/api/applications").status_code, 401)
+        register = self.client.post("/api/auth/register", json={
+            "role": "student", "name": "Persisted", "email": "persisted@test.com", "password": "secret",
+            "university": "Uni", "career": "CS", "semester": "3", "skills": "Python"
+        })
+        self.assertEqual(register.status_code, 201)
+        login = self.client.post("/api/auth/login", json={
+            "role": "student", "email": "persisted@test.com", "password": "secret"
+        })
+        self.assertEqual(login.status_code, 200)
+        token = login.get_json()["token"]
+        profile = self.client.get("/api/students/profile", headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(profile.get_json()["student"]["email"], "persisted@test.com")
+        self.assertEqual(self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "Bad Job Co", "email": "badjob@test.com", "password": "secret"
+        }).status_code, 201)
+        company_login = self.client.post("/api/auth/login", json={
+            "role": "company", "email": "badjob@test.com", "password": "secret"
+        })
+        company_token = company_login.get_json()["token"]
+        invalid_job = self.client.post("/api/jobs", headers={"Authorization": f"Bearer {company_token}"}, json={
+            "title": "Bad", "description": "Invalid type", "required_skills": "Python",
+            "location": "Remote", "job_type": "Invalid"
+        })
+        self.assertEqual(invalid_job.status_code, 400)
+
     def test_company_can_create_update_and_delete_own_job(self):
         self.client.post("/api/auth/register", json={
             "role": "company", "companyName": "Acme", "email": "acme@test.com", "password": "secret"

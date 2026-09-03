@@ -18,6 +18,22 @@ app = Flask(__name__)
 CORS(app)
 
 
+@app.errorhandler(400)
+def bad_request(_error):
+    return jsonify(message="Invalid request"), 400
+
+
+@app.errorhandler(404)
+def not_found(_error):
+    return jsonify(message="Resource not found"), 404
+
+
+@app.errorhandler(500)
+def server_error(_error):
+    get_db().rollback()
+    return jsonify(message="Internal server error"), 500
+
+
 def get_db():
     if "db" not in g:
         DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -44,9 +60,13 @@ def query_all(sql, params=()):
 
 def execute(sql, params=()):
     db = get_db()
-    cursor = db.execute(sql, params)
-    db.commit()
-    return cursor
+    try:
+        cursor = db.execute(sql, params)
+        db.commit()
+        return cursor
+    except sqlite3.Error:
+        db.rollback()
+        raise
 
 
 def initialize_database():
@@ -82,6 +102,7 @@ def initialize_database():
         );
         """
     )
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_applications_student_job ON applications(student_id, job_id)")
     db.commit()
 
 

@@ -82,9 +82,14 @@ test_recommendations_match_skills_and_exclude_applied_jobs ... ok
 test_registration_rejects_weak_password_and_invalid_email ... ok
 test_student_can_apply_to_job_and_view_applications ... ok
 test_student_registration_login_and_application_flow ... ok
-Ran 8 tests
+test_errors_validation_and_persistence ... ok
+Ran 9 tests
 OK
 ```
+
+The API returns consistent JSON errors for invalid requests, missing resources,
+and internal failures. All users, profiles, jobs, and applications are stored
+in SQLite with transactional commits and rollback on database errors.
 
 Manual health check while the backend is running:
 
