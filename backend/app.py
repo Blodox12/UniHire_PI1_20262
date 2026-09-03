@@ -247,12 +247,18 @@ def job_detail(job_id):
 def recommended_jobs():
     student = query_one("SELECT skills FROM students WHERE id=?", (g.user["id"],))
     skills = {item.strip().lower() for item in (student["skills"] or "").split(",") if item.strip()}
+    applied = {row["job_id"] for row in query_all("SELECT job_id FROM applications WHERE student_id=?", (g.user["id"],))}
     result = []
     for row in query_all("SELECT * FROM jobs ORDER BY id DESC"):
         job = row_dict(row)
+        if job["id"] in applied:
+            continue
         required = {item.strip().lower() for item in (job["required_skills"] or "").split(",") if item.strip()}
-        job["matchCount"] = len(skills & required)
-        result.append(job)
+        matched = skills & required
+        if matched:
+            job["matchCount"] = len(matched)
+            job["matchPercentage"] = round(len(matched) / len(required) * 100) if required else 0
+            result.append(job)
     result.sort(key=lambda job: job["matchCount"], reverse=True)
     return jsonify(jobs=result)
 
@@ -326,8 +332,24 @@ def student_applications():
 @app.get("/api/applications/company")
 @protect("company")
 def company_applicants():
-    rows = query_all("SELECT a.id,a.status,a.applied_at,j.title,s.name AS student_name FROM applications a JOIN jobs j ON j.id=a.job_id JOIN students s ON s.id=a.student_id WHERE j.company_id=? ORDER BY a.id DESC", (g.user["id"],))
+    rows = query_all("SELECT a.id,a.status,a.applied_at,a.job_id,s.id AS student_id,j.title,s.name AS student_name FROM applications a JOIN jobs j ON j.id=a.job_id JOIN students s ON s.id=a.student_id WHERE j.company_id=? ORDER BY a.id DESC", (g.user["id"],))
     return jsonify(applicants=[row_dict(row) for row in rows])
+
+
+@app.put("/api/applications/<int:application_id>/status")
+@protect("company")
+def update_application_status(application_id):
+    status = (request.get_json(silent=True) or {}).get("status")
+    if status not in {"Pending", "Accepted", "Rejected"}:
+        return jsonify(message="Invalid application status"), 400
+    application = query_one(
+        "SELECT a.id FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=? AND j.company_id=?",
+        (application_id, g.user["id"]),
+    )
+    if not application:
+        return jsonify(message="Application not found"), 404
+    execute("UPDATE applications SET status=? WHERE id=?", (status, application_id))
+    return jsonify(message="Application status updated", status=status)
 
 
 if __name__ == "__main__":

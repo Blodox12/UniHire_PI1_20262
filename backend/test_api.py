@@ -88,6 +88,38 @@ class ApiFlowTest(unittest.TestCase):
         response = self.client.get("/api/jobs/search")
         self.assertEqual(response.get_json()["count"], 2)
 
+    def test_recommendations_match_skills_and_exclude_applied_jobs(self):
+        self.client.post("/api/auth/register", json={
+            "role": "student", "name": "Skillful", "email": "skills@test.com", "password": "secret",
+            "university": "Uni", "career": "Engineering", "semester": "5", "skills": "Python, SQL"
+        })
+        student_login = self.client.post("/api/auth/login", json={
+            "role": "student", "email": "skills@test.com", "password": "secret"
+        })
+        student_token = student_login.get_json()["token"]
+        self.client.post("/api/auth/register", json={
+            "role": "company", "companyName": "MatchCo", "email": "match@test.com", "password": "secret"
+        })
+        company_login = self.client.post("/api/auth/login", json={
+            "role": "company", "email": "match@test.com", "password": "secret"
+        })
+        company_token = company_login.get_json()["token"]
+        matching = self.client.post("/api/jobs", headers={"Authorization": f"Bearer {company_token}"}, json={
+            "title": "Python Analyst", "description": "Analyze data", "required_skills": "Python, SQL",
+            "location": "Remote", "job_type": "Remote"
+        }).get_json()["job"]
+        self.client.post("/api/jobs", headers={"Authorization": f"Bearer {company_token}"}, json={
+            "title": "Java Developer", "description": "Build services", "required_skills": "Java",
+            "location": "Remote", "job_type": "Remote"
+        })
+        recommendations = self.client.get("/api/jobs/recommended", headers={"Authorization": f"Bearer {student_token}"})
+        self.assertEqual(recommendations.status_code, 200)
+        self.assertEqual(recommendations.get_json()["jobs"][0]["id"], matching["id"])
+        self.assertEqual(recommendations.get_json()["jobs"][0]["matchPercentage"], 100)
+        self.client.post("/api/applications", headers={"Authorization": f"Bearer {student_token}"}, json={"jobId": matching["id"]})
+        recommendations = self.client.get("/api/jobs/recommended", headers={"Authorization": f"Bearer {student_token}"})
+        self.assertEqual(recommendations.get_json()["jobs"], [])
+
     def test_company_registration_and_duplicate_email(self):
         response = self.client.post("/api/auth/register", json={
             "role": "company", "companyName": "Acme", "email": "ACME@TEST.COM",
@@ -168,6 +200,14 @@ class ApiFlowTest(unittest.TestCase):
         self.assertEqual(app["title"], "Software Engineer")
         company_apps = self.client.get("/api/applications/company", headers={"Authorization": f"Bearer {company_token}"})
         self.assertEqual(len(company_apps.get_json()["applicants"]), 1)
+        application_id = company_apps.get_json()["applicants"][0]["id"]
+        status_response = self.client.put(
+            f"/api/applications/{application_id}/status",
+            headers={"Authorization": f"Bearer {company_token}"}, json={"status": "Accepted"}
+        )
+        self.assertEqual(status_response.status_code, 200)
+        student_apps = self.client.get("/api/applications", headers={"Authorization": f"Bearer {student_token}"})
+        self.assertEqual(student_apps.get_json()["applications"][0]["status"], "Accepted")
         duplicate_response = self.client.post("/api/applications", headers={"Authorization": f"Bearer {student_token}"}, json={"jobId": job_id})
         self.assertEqual(duplicate_response.status_code, 400)
         self.assertIn("already applied", duplicate_response.get_json()["message"].lower())

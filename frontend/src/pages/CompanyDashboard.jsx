@@ -38,6 +38,19 @@ function CompanyDashboard() {
     }
   };
 
+  const handleStatusChange = async (applicationId, status) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications/${applicationId}/status`, { status }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApplicants((current) => current.map((app) => app.id === applicationId ? { ...app, status } : app));
+      setMessage('Application status updated.');
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Unable to update application status.');
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -77,7 +90,11 @@ function CompanyDashboard() {
                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>{app.title}</p>
                         <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#999' }}>Applied: {new Date(app.applied_at).toLocaleDateString()}</p>
                       </div>
-                      <span className="badge" style={{ background: app.status === 'Pending' ? '#ffa500' : app.status === 'Accepted' ? '#28a745' : '#dc3545' }}>{app.status}</span>
+                      <select value={app.status} onChange={(event) => handleStatusChange(app.id, event.target.value)} aria-label={`Status for ${app.student_name}`}>
+                        <option value="Pending">Pending</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
                     </div>
                   </div>
                 ))}

@@ -52,8 +52,13 @@ function StudentDashboard() {
             )}
             {activeView === 'recommended' && (
               <div className="dashboard-card">
-                <h2>Recommended Jobs</h2>
+                <h2>Recommended Jobs ({recommendedJobs.length})</h2>
                 {recommendedJobs.length === 0 ? <p className="empty-state">No recommendations yet.</p> : recommendedJobs.map((job) => <JobCard key={job.id} job={job} showApply={false} />)}
+                {recommendedJobs.length > 0 && recommendedJobs.map((job) => (
+                  <p key={`match-${job.id}`} style={{ color: '#287a45', fontSize: '0.9rem' }}>
+                    {job.title}: {job.matchPercentage}% skill match ({job.matchCount} matching skill{job.matchCount !== 1 ? 's' : ''})
+                  </p>
+                ))}
               </div>
             )}
             {activeView === 'applications' && (
