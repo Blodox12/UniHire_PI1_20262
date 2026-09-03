@@ -1,0 +1,48 @@
+{% extends "core/base.html" %}
+{% block title %}Explore Opportunities - UniHire{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <h2>Explore Opportunities</h2>
+    <p>Search internships and entry-level jobs aligned with your profile.</p>
+
+    <div class="card" style="margin-bottom: 1rem;">
+      <form method="get">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Search</label>
+            <input name="q" value="{{ search }}" placeholder="Skills, title, or keywords" />
+          </div>
+          <div class="form-group">
+            <label>Job Type</label>
+            <select name="job_type">
+              <option value="" {% if not job_type %}selected{% endif %}>All</option>
+              <option value="Remote" {% if job_type == "Remote" %}selected{% endif %}>Remote</option>
+              <option value="Hybrid" {% if job_type == "Hybrid" %}selected{% endif %}>Hybrid</option>
+              <option value="On-site" {% if job_type == "On-site" %}selected{% endif %}>On-site</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input name="location" value="{{ location }}" placeholder="City or country" />
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top: 0.5rem;">Search</button>
+        {% if has_filters %}
+          <a href="{% url 'jobs:jobs' %}" class="btn btn-secondary" style="margin-top: 0.5rem;">Clear Filters</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <p class="text-muted">Found {{ jobs|length }} job{{ jobs|length|pluralize }}</p>
+
+    {% if not jobs %}
+      <p style="color: crimson; text-align: center;">No jobs match your search. Try adjusting your filters.</p>
+    {% endif %}
+
+    {% for job in jobs %}
+      {% include "jobs/_job_card.html" with job=job show_apply=True %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

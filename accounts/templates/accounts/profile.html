@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% block title %}Edit Profile - UniHire{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="card form-card">
+      <h2>Edit Profile</h2>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Name</label>
+          <input name="name" value="{{ form.name.value|default:'' }}" required />
+        </div>
+        <div class="form-group">
+          <label>University</label>
+          <input name="university" value="{{ form.university.value|default:'' }}" required />
+        </div>
+        <div class="form-group">
+          <label>Career</label>
+          <input name="career" value="{{ form.career.value|default:'' }}" required />
+        </div>
+        <div class="form-group">
+          <label>Semester</label>
+          <input type="number" name="semester" min="1" max="20" value="{{ form.semester.value|default:'' }}" required />
+          {% if form.semester.errors %}<p class="message-error">{{ form.semester.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Skills</label>
+          <input name="skills" value="{{ form.skills.value|default:'' }}" placeholder="React, Node.js, SQL" />
+        </div>
+        <div class="form-group">
+          <label>Certifications</label>
+          <input name="certifications" value="{{ form.certifications.value|default:'' }}" placeholder="AWS, Google Data Analytics" />
+        </div>
+        <div class="form-group">
+          <label>Resume Filename</label>
+          <input name="resume_filename" value="{{ form.resume_filename.value|default:'' }}" />
+        </div>
+        <button class="btn btn-primary" type="submit">Save Profile</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

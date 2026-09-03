@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% block title %}Student Dashboard - UniHire{% endblock %}
+{% block content %}
+<div class="dashboard-shell">
+  <div class="container dashboard-layout">
+    <aside class="sidebar">
+      <h3>Student Panel</h3>
+      <a class="tab-link {% if view == 'profile' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=profile">Profile</a>
+      <a class="tab-link {% if view == 'recommended' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=recommended">Recommended Jobs</a>
+      <a class="tab-link {% if view == 'applications' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=applications">My Applications</a>
+      <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">Edit Profile</a>
+    </aside>
+    <section>
+      {% if view == "profile" %}
+        <div class="dashboard-card">
+          <h2>Welcome, {{ student.name }}</h2>
+          <p><strong>University:</strong> {{ student.university }}</p>
+          <p><strong>Career:</strong> {{ student.career }}</p>
+          <p><strong>Semester:</strong> {{ student.semester }}</p>
+          <p><strong>Skills:</strong> {{ student.skills|default:"Add your skills" }}</p>
+          <p><strong>Certifications:</strong> {{ student.certifications|default:"Add certifications" }}</p>
+        </div>
+      {% elif view == "recommended" %}
+        <div class="dashboard-card">
+          <h2>Recommended Jobs ({{ recommended_jobs|length }})</h2>
+          {% if not recommended_jobs %}
+            <p class="empty-state">No recommendations yet.</p>
+          {% else %}
+            {% for job in recommended_jobs %}
+              {% include "jobs/_job_card.html" with job=job show_apply=False %}
+              <p class="match-note">{{ job.title }}: {{ job.match_percentage }}% skill match ({{ job.match_count }} matching skill{{ job.match_count|pluralize }})</p>
+            {% endfor %}
+          {% endif %}
+        </div>
+      {% elif view == "applications" %}
+        <div class="dashboard-card">
+          <h2>My Applications ({{ applications|length }})</h2>
+          {% if not applications %}
+            <p class="empty-state">You have not applied yet.</p>
+          {% else %}
+            {% for app in applications %}
+              <div class="list-item">
+                <div class="list-item-row">
+                  <div>
+                    <strong>{{ app.job.title }}</strong>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #666;">{{ app.job.description }}</p>
+                    <p class="text-small">Applied: {{ app.applied_at|date:"N j, Y" }}</p>
+                  </div>
+                  <span class="badge {% if app.status == 'Pending' %}badge-pending{% elif app.status == 'Accepted' %}badge-accepted{% else %}badge-rejected{% endif %}">{{ app.status }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

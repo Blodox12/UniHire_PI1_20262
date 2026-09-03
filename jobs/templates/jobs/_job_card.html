@@ -1,0 +1,25 @@
+<article class="card job-card">
+  <div class="card-header">
+    <h3>{{ job.title }}</h3>
+    <span class="badge">{{ job.job_type }}</span>
+  </div>
+  <p>{{ job.description }}</p>
+  <div class="meta-row">
+    <span>Skills: {{ job.required_skills }}</span>
+    <span>Location: {{ job.location }}</span>
+  </div>
+  <div class="hero-actions">
+    <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-secondary">View Details</a>
+    {% if show_apply %}
+      {% if job.id in applied_ids %}
+        <button class="btn btn-success" disabled>&#10003; Applied</button>
+      {% else %}
+        <form action="{% url 'jobs:apply_to_job' job.id %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="jobs:jobs" />
+          <button class="btn btn-primary" type="submit">Apply Now</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+</article>

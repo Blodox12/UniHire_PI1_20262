@@ -1,0 +1,38 @@
+{% extends "core/base.html" %}
+{% block title %}{{ job.title }} - UniHire{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="card">
+      <a href="{% url 'jobs:jobs' %}" class="btn btn-secondary" style="margin-bottom: 1rem;">&larr; Back to Jobs</a>
+      <div class="card-header">
+        <h2>{{ job.title }}</h2>
+        <span class="badge">{{ job.job_type }}</span>
+      </div>
+      <p><strong>Company:</strong> {{ job.company.company_name }}</p>
+      <p><strong>Location:</strong> {{ job.location }}</p>
+      <hr />
+      <h3>Description</h3>
+      <p>{{ job.description }}</p>
+      <h3>Required Skills</h3>
+      <p>{{ job.required_skills }}</p>
+
+      <div class="hero-actions" style="margin-top: 2rem;">
+        {% if session_role == "student" %}
+          {% if has_applied %}
+            <button class="btn btn-success" disabled>&#10003; Applied</button>
+          {% else %}
+            <form action="{% url 'jobs:apply_to_job' job.id %}" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="jobs:job_detail" />
+              <button class="btn btn-primary" type="submit">Apply Now</button>
+            </form>
+          {% endif %}
+        {% elif not is_logged_in %}
+          <a href="{% url 'accounts:login' %}" class="btn btn-primary">Log in to apply</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
