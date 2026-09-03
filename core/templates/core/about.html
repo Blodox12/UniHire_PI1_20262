@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block title %}About UniHire{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="card">
+      <h2>About UniHire</h2>
+      <p>UniHire helps university students obtain their first professional experience by matching them with internships and entry-level opportunities based on academic knowledge, technical skills, certifications, and interests — instead of prior work experience.</p>
+      <p>Companies can post openings, review applicants, and manage the hiring process, while students can search, filter, and apply to roles that fit their profile in just a few clicks.</p>
+      <a href="{% url 'core:home' %}" class="btn btn-secondary">Back to Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

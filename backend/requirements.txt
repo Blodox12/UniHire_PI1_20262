@@ -1,4 +1,0 @@
-PyJWT==2.10.1
-bcrypt==4.3.0
-Django==4.2.14
-django-cors-headers==4.0.0

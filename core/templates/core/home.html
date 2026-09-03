@@ -1,0 +1,86 @@
+{% extends "core/base.html" %}
+{% block title %}UniHire - Home{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <h1>Find your first professional experience with UniHire.</h1>
+      <p>We match students with internships and entry-level roles based on academic background, skills, certifications, and interests.</p>
+      <div class="hero-actions">
+        <a href="{% url 'accounts:register_student' %}" class="btn btn-primary">Register</a>
+        <a href="{% url 'jobs:jobs' %}" class="btn btn-secondary">Browse Jobs</a>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Why UniHire?</h3>
+      <ul>
+        <li>Personalized opportunities</li>
+        <li>Fast student-company matching</li>
+        <li>Professional profile and applications</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Features</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Smart Matching</h3>
+        <p>Discover jobs aligned with your academic and technical profile.</p>
+      </div>
+      <div class="card">
+        <h3>Simple Applications</h3>
+        <p>Apply to internships and entry-level jobs in a few clicks.</p>
+      </div>
+      <div class="card">
+        <h3>Company Tools</h3>
+        <p>Post openings, manage applicants, and track hiring progress.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-white">
+  <div class="container">
+    <h2 class="section-title">How It Works</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>1. Create Profile</h3>
+        <p>Share your university, career path, skills, and certifications.</p>
+      </div>
+      <div class="card">
+        <h3>2. Discover Roles</h3>
+        <p>Browse all openings or receive tailored recommendations.</p>
+      </div>
+      <div class="card">
+        <h3>3. Apply</h3>
+        <p>Send your application and track your progress in one place.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Testimonials</h2>
+    <div class="grid-3">
+      <div class="card">
+        <p>"I landed my first internship through UniHire in less than two weeks."</p>
+        <strong>— Ana, Computer Science Student</strong>
+      </div>
+      <div class="card">
+        <p>"The platform made it easy to connect with companies that fit my background."</p>
+        <strong>— Daniel, Business Student</strong>
+      </div>
+      <div class="card">
+        <p>"A professional experience that felt simple, modern, and effective."</p>
+        <strong>— Sofia, Marketing Student</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}UniHire{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-wrap">
+    <a href="{% url 'core:home' %}" class="brand">UniHire</a>
+    <div class="nav-links">
+      <a href="{% url 'jobs:jobs' %}">Browse Jobs</a>
+      {% if is_logged_in %}
+        <a href="{% if session_role == 'company' %}{% url 'jobs:company_dashboard' %}{% else %}{% url 'jobs:student_dashboard' %}{% endif %}">Dashboard</a>
+        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-secondary">Logout</button>
+        </form>
+      {% else %}
+        <a href="{% url 'accounts:login' %}">Login</a>
+        <a href="{% url 'accounts:register_student' %}" class="btn btn-primary">Register</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<main>
+  {% if messages %}
+    <div class="container" style="margin-top: 1rem;">
+      {% for message in messages %}
+        <p class="{% if message.tags == 'error' %}message-error{% else %}message-success{% endif %}">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="container footer-content">
+    <p>© 2026 UniHire. Connecting students with their first professional opportunities.</p>
+  </div>
+</footer>
+
+</body>
+</html>
