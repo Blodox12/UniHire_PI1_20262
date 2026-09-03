@@ -28,27 +28,28 @@ Many university students struggle to find employment because:
 - They do not know which vacancies fit their current skills.
 - Companies often prioritize experienced candidates.
 
-## Technology
+- ## Technology
 
-- Backend: Python 3.10+ with Flask, SQLite, and JWT.
+- Backend: Python 3.10+ with Django, SQLite, and JWT (API implemented in `backend/django_unihire`).
 - Frontend: React with Vite.
 - Database: SQLite at `backend/database/unihire.db`.
 
 ## Local Execution
 
-### 1. Python backend
+### 1. Python backend (Django)
 
 From the project root:
 
 ```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python app.py
+cd backend/django_unihire
+python -m venv ../../.venv
+..\.venv\Scripts\Activate.ps1
+python -m pip install -r ../requirements.txt
+python manage.py migrate
+python manage.py runserver 0.0.0.0:5000
 ```
 
-The API is available at `http://localhost:5000`. On Linux or macOS, activate the environment with `source .venv/bin/activate`.
+The Django project serves both simple pages and the API. The API endpoints are under `/api/` and the home page is `/`.
 
 ### 2. React frontend
 
