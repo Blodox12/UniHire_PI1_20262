@@ -165,6 +165,7 @@ class ApiFlowTest(unittest.TestCase):
         app = apps_response.get_json()["applications"][0]
         self.assertEqual(app["job_id"], job_id)
         self.assertEqual(app["status"], "Pending")
+        self.assertEqual(app["title"], "Software Engineer")
         company_apps = self.client.get("/api/applications/company", headers={"Authorization": f"Bearer {company_token}"})
         self.assertEqual(len(company_apps.get_json()["applicants"]), 1)
         duplicate_response = self.client.post("/api/applications", headers={"Authorization": f"Bearer {student_token}"}, json={"jobId": job_id})

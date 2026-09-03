@@ -75,6 +75,7 @@ def initialize_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER NOT NULL,
             job_id INTEGER NOT NULL, status TEXT DEFAULT 'Pending',
             applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, job_id),
             FOREIGN KEY(student_id) REFERENCES students(id),
             FOREIGN KEY(job_id) REFERENCES jobs(id)
         );
@@ -308,7 +309,10 @@ def apply_to_job():
         return jsonify(message="You already applied to this job"), 400
     if not query_one("SELECT id FROM jobs WHERE id=?", (job_id,)):
         return jsonify(message="Job not found"), 404
-    execute("INSERT INTO applications (student_id,job_id,status) VALUES (?,?,?)", (g.user["id"], job_id, "Pending"))
+    try:
+        execute("INSERT INTO applications (student_id,job_id,status) VALUES (?,?,?)", (g.user["id"], job_id, "Pending"))
+    except sqlite3.IntegrityError:
+        return jsonify(message="You already applied to this job"), 400
     return jsonify(message="Application submitted successfully"), 201
 
 
