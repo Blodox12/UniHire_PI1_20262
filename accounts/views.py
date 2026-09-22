@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth import authenticate
 from django.shortcuts import redirect, render
 
 from .decorators import login_required
@@ -9,7 +9,7 @@ from .forms import (
     StudentProfileForm,
     StudentRegisterForm,
 )
-from .models import Company, Student
+from .models import Company, CustomUser, Student
 from .utils import current_student
 
 # ---------------------------------------------------------------------------
@@ -26,16 +26,14 @@ def login_view(request):
             data = form.cleaned_data
             email = data["email"].strip().lower()
             password = data["password"]
-            model = Student if data["role"] == "student" else Company
-            user = model.objects.filter(email=email).first()
-            if not user:
-                messages.error(request, "User not found")
-            elif not check_password(password, user.password):
-                messages.error(request, "Invalid password")
+            user = authenticate(request, email=email, password=password)
+            if not user or user.role != data["role"]:
+                messages.error(request, "User not found or invalid password")
             else:
                 request.session["user_id"] = user.id
                 request.session["role"] = data["role"]
-                request.session["name"] = getattr(user, "name", getattr(user, "company_name", ""))
+                profile = Student.objects.filter(user=user).first() or Company.objects.filter(user=user).first()
+                request.session["name"] = getattr(profile, "name", getattr(profile, "company_name", ""))
                 return redirect(
                     "jobs:company_dashboard" if data["role"] == "company" else "jobs:student_dashboard"
                 )
@@ -55,13 +53,19 @@ def register_student(request):
         form = StudentRegisterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            if Student.objects.filter(email=data["email"]).exists() or Company.objects.filter(email=data["email"]).exists():
+            email = data["email"].strip().lower()
+            if CustomUser.objects.filter(email=email).exists():
                 messages.error(request, "User already exists")
             else:
+                user = CustomUser.objects.create_user(
+                    email=email,
+                    password=data["password"],
+                    role="student",
+                )
                 Student.objects.create(
+                    user=user,
                     name=data["name"].strip(),
-                    email=data["email"],
-                    password=make_password(data["password"]),
+                    email=email,
                     university=data["university"].strip(),
                     career=data["career"].strip(),
                     semester=data["semester"],
@@ -83,13 +87,19 @@ def register_company(request):
         form = CompanyRegisterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            if Company.objects.filter(email=data["email"]).exists() or Student.objects.filter(email=data["email"]).exists():
+            email = data["email"].strip().lower()
+            if CustomUser.objects.filter(email=email).exists():
                 messages.error(request, "User already exists")
             else:
+                user = CustomUser.objects.create_user(
+                    email=email,
+                    password=data["password"],
+                    role="company",
+                )
                 Company.objects.create(
+                    user=user,
                     company_name=data["company_name"].strip(),
-                    email=data["email"],
-                    password=make_password(data["password"]),
+                    email=email,
                 )
                 messages.success(request, "Account created successfully. Please log in.")
                 return redirect("accounts:login")
