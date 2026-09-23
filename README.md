@@ -15,12 +15,16 @@ applications).
 
 - Python 3.10+ / Django (see `requirements.txt`)
 - SQLite database
-- Server-side session authentication
+- Server-side session authentication with Django's auth system
+- Hashed password storage via Django's `set_password()` / `authenticate()` workflow
+- Automatic login after successful student or company registration
 - Plain HTML templates + a single CSS file (no build step, no JS framework)
 
 ## Features
 
 - Student and Company registration and login (role based)
+- Django-backed user accounts with hashed passwords and role-specific authentication
+- Automatic session login after a successful student or company registration
 - Student profile management (university, career, semester, skills, certifications, resume filename)
 - Job posting management for companies (create, edit, delete)
 - Job search and filtering (keyword, job type, location)
@@ -76,6 +80,8 @@ This creates the local SQLite database file and its tables:
 python manage.py migrate
 ```
 
+When the project evolves and a custom Django user model or profile relationship is added, the migrations must be applied in order. If you encounter a stale or inconsistent local SQLite state, delete the existing `db.sqlite3` file and run the migration command again to recreate the database cleanly.
+
 
 ### 5. Run the project
 
@@ -101,9 +107,9 @@ UniHire-Django/
 │   ├── templates/core/      base.html (shared layout) + home.html, about.html
 │   └── urls.py
 ├── accounts/               Users, authentication and profile
-│   ├── models.py             Student, Company
+│   ├── models.py             CustomUser, Student, Company profile models
 │   ├── forms.py               Registration, login, profile forms
-│   ├── views.py                Login, logout, registration, profile
+│   ├── views.py                Login, logout, registration, automatic login after signup, profile
 │   ├── decorators.py           login_required(role=...)
 │   ├── utils.py                 current_student(request), current_company(request)
 │   ├── admin.py
@@ -111,7 +117,7 @@ UniHire-Django/
 │   │                            register_company.html, profile.html
 │   └── urls.py
 ├── jobs/                    Job postings and applications
-│   ├── models.py              Job, Application
+│   ├── models.py              Job, Application relations between companies and students
 │   ├── forms.py                JobForm
 │   ├── views.py                 Job search/detail/CRUD, dashboards, applications
 │   ├── admin.py

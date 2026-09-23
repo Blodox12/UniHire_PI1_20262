@@ -62,7 +62,7 @@ def register_student(request):
                     password=data["password"],
                     role="student",
                 )
-                Student.objects.create(
+                profile = Student.objects.create(
                     user=user,
                     name=data["name"].strip(),
                     email=email,
@@ -73,8 +73,11 @@ def register_student(request):
                     certifications=data.get("certifications", ""),
                     resume_filename=data.get("resume_filename", ""),
                 )
-                messages.success(request, "Account created successfully. Please log in.")
-                return redirect("accounts:login")
+                request.session["user_id"] = user.id
+                request.session["role"] = "student"
+                request.session["name"] = profile.name
+                messages.success(request, "Account created successfully.")
+                return redirect("jobs:student_dashboard")
         else:
             messages.error(request, "Please review the highlighted fields.")
     else:
@@ -96,13 +99,16 @@ def register_company(request):
                     password=data["password"],
                     role="company",
                 )
-                Company.objects.create(
+                profile = Company.objects.create(
                     user=user,
                     company_name=data["company_name"].strip(),
                     email=email,
                 )
-                messages.success(request, "Account created successfully. Please log in.")
-                return redirect("accounts:login")
+                request.session["user_id"] = user.id
+                request.session["role"] = "company"
+                request.session["name"] = profile.company_name
+                messages.success(request, "Account created successfully.")
+                return redirect("jobs:company_dashboard")
         else:
             messages.error(request, "Please review the highlighted fields.")
     else:
