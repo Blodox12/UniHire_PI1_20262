@@ -5,7 +5,10 @@
   <div class="container">
     <div class="card form-card">
       <h2>Edit Profile</h2>
-      <form method="post">
+      {% if student.profile_photo %}
+        <p><img src="{{ student.profile_photo.url }}" alt="Profile photo" style="max-width: 120px; border-radius: 8px;" /></p>
+      {% endif %}
+      <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group">
           <label>Name</label>
@@ -17,11 +20,12 @@
         </div>
         <div class="form-group">
           <label>Career</label>
-          <input name="career" value="{{ form.career.value|default:'' }}" required />
+          {{ form.career }}
+          {% if form.career.errors %}<p class="message-error">{{ form.career.errors|join:", " }}</p>{% endif %}
         </div>
         <div class="form-group">
           <label>Semester</label>
-          <input type="number" name="semester" min="1" max="20" value="{{ form.semester.value|default:'' }}" required />
+          {{ form.semester }}
           {% if form.semester.errors %}<p class="message-error">{{ form.semester.errors|join:", " }}</p>{% endif %}
         </div>
         <div class="form-group">
@@ -33,8 +37,23 @@
           <input name="certifications" value="{{ form.certifications.value|default:'' }}" placeholder="AWS, Google Data Analytics" />
         </div>
         <div class="form-group">
-          <label>Resume Filename</label>
-          <input name="resume_filename" value="{{ form.resume_filename.value|default:'' }}" />
+          <label>Profile Photo</label>
+          {{ form.profile_photo }}
+          {% if form.profile_photo.errors %}<p class="message-error">{{ form.profile_photo.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Resume PDF</label>
+          {{ form.resume_filename }}
+          {% if student.resume_filename %}<p><a href="{{ student.resume_filename.url }}" target="_blank">View current resume</a></p>{% endif %}
+          {% if form.resume_filename.errors %}<p class="message-error">{{ form.resume_filename.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Other Documents</label>
+          {{ form.documents }}
+          {% if form.documents.errors %}<p class="message-error">{{ form.documents.errors|join:", " }}</p>{% endif %}
+          {% for document in student.documents.all %}
+            <p><a href="{{ document.file.url }}" target="_blank">{{ document.file.name }}</a></p>
+          {% endfor %}
         </div>
         <button class="btn btn-primary" type="submit">Save Profile</button>
       </form>

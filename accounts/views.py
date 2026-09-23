@@ -5,11 +5,12 @@ from django.shortcuts import redirect, render
 from .decorators import login_required
 from .forms import (
     CompanyRegisterForm,
+    CompanyProfileForm,
     LoginForm,
     StudentProfileForm,
     StudentRegisterForm,
 )
-from .models import Company, CustomUser, Student
+from .models import Company, CustomUser, Student, StudentDocument
 from .utils import current_student
 
 # ---------------------------------------------------------------------------
@@ -50,7 +51,7 @@ def logout_view(request):
 
 def register_student(request):
     if request.method == "POST":
-        form = StudentRegisterForm(request.POST)
+        form = StudentRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             data = form.cleaned_data
             email = data["email"].strip().lower()
@@ -71,7 +72,11 @@ def register_student(request):
                     semester=data["semester"],
                     skills=data.get("skills", ""),
                     certifications=data.get("certifications", ""),
-                    resume_filename=data.get("resume_filename", ""),
+                    profile_photo=data.get("profile_photo"),
+                    resume_filename=data.get("resume_filename"),
+                )
+                StudentDocument.objects.bulk_create(
+                    [StudentDocument(student=profile, file=document) for document in data.get("documents", [])]
                 )
                 request.session["user_id"] = user.id
                 request.session["role"] = "student"
@@ -87,7 +92,7 @@ def register_student(request):
 
 def register_company(request):
     if request.method == "POST":
-        form = CompanyRegisterForm(request.POST)
+        form = CompanyRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             data = form.cleaned_data
             email = data["email"].strip().lower()
@@ -103,6 +108,7 @@ def register_company(request):
                     user=user,
                     company_name=data["company_name"].strip(),
                     email=email,
+                    profile_photo=data.get("profile_photo"),
                 )
                 request.session["user_id"] = user.id
                 request.session["role"] = "company"
@@ -125,7 +131,7 @@ def register_company(request):
 def profile_view(request):
     student = current_student(request)
     if request.method == "POST":
-        form = StudentProfileForm(request.POST)
+        form = StudentProfileForm(request.POST, request.FILES)
         if form.is_valid():
             data = form.cleaned_data
             student.name = data["name"]
@@ -134,8 +140,14 @@ def profile_view(request):
             student.semester = data["semester"]
             student.skills = data.get("skills", "")
             student.certifications = data.get("certifications", "")
-            student.resume_filename = data.get("resume_filename", "")
+            if data.get("profile_photo"):
+                student.profile_photo = data["profile_photo"]
+            if data.get("resume_filename"):
+                student.resume_filename = data["resume_filename"]
             student.save()
+            StudentDocument.objects.bulk_create(
+                [StudentDocument(student=student, file=document) for document in data.get("documents", [])]
+            )
             messages.success(request, "Profile updated successfully.")
     else:
         form = StudentProfileForm(initial={
@@ -145,6 +157,25 @@ def profile_view(request):
             "semester": student.semester,
             "skills": student.skills,
             "certifications": student.certifications,
-            "resume_filename": student.resume_filename,
         })
-    return render(request, "accounts/profile.html", {"form": form})
+    return render(request, "accounts/profile.html", {"form": form, "student": student})
+
+
+@login_required(role="company")
+def company_profile_view(request):
+    company = Company.objects.filter(user_id=request.session.get("user_id")).first()
+    if request.method == "POST":
+        form = CompanyProfileForm(request.POST, request.FILES)
+        if form.is_valid():
+            company.company_name = form.cleaned_data["company_name"]
+            if form.cleaned_data.get("profile_photo"):
+                company.profile_photo = form.cleaned_data["profile_photo"]
+            company.save()
+            request.session["name"] = company.company_name
+            messages.success(request, "Profile updated successfully.")
+            return redirect("jobs:company_dashboard")
+    else:
+        form = CompanyProfileForm(initial={
+            "company_name": company.company_name,
+        })
+    return render(request, "accounts/company_profile.html", {"form": form, "company": company})

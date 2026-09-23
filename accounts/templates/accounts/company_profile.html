@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block title %}Edit Company Profile - UniHire{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="card form-card">
+      <h2>Edit Company Profile</h2>
+      {% if company.profile_photo %}
+        <p><img src="{{ company.profile_photo.url }}" alt="Company profile photo" style="max-width: 120px; border-radius: 8px;" /></p>
+      {% endif %}
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Company Name</label>
+          {{ form.company_name }}
+          {% if form.company_name.errors %}<p class="message-error">{{ form.company_name.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Profile Photo</label>
+          {{ form.profile_photo }}
+          {% if form.profile_photo.errors %}<p class="message-error">{{ form.profile_photo.errors|join:", " }}</p>{% endif %}
+        </div>
+        <button class="btn btn-primary" type="submit">Save Profile</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

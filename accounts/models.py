@@ -64,11 +64,21 @@ class Student(models.Model):
     semester = models.CharField(max_length=10, blank=True)
     skills = models.CharField(max_length=500, blank=True)
     certifications = models.CharField(max_length=500, blank=True)
-    resume_filename = models.CharField(max_length=255, blank=True)
+    profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
+    resume_filename = models.FileField(upload_to="resumes/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+
+class StudentDocument(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="documents")
+    file = models.FileField(upload_to="student_documents/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.file.name
 
 
 class Company(models.Model):
@@ -81,6 +91,7 @@ class Company(models.Model):
     )
     company_name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
+    profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

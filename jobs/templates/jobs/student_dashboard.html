@@ -14,11 +14,13 @@
       {% if view == "profile" %}
         <div class="dashboard-card">
           <h2>Welcome, {{ student.name }}</h2>
+          {% if student.profile_photo %}<p><img src="{{ student.profile_photo.url }}" alt="Profile photo" style="max-width: 120px; border-radius: 8px;" /></p>{% endif %}
           <p><strong>University:</strong> {{ student.university }}</p>
           <p><strong>Career:</strong> {{ student.career }}</p>
           <p><strong>Semester:</strong> {{ student.semester }}</p>
           <p><strong>Skills:</strong> {{ student.skills|default:"Add your skills" }}</p>
           <p><strong>Certifications:</strong> {{ student.certifications|default:"Add certifications" }}</p>
+          {% if student.resume_filename %}<p><strong>Resume:</strong> <a href="{{ student.resume_filename.url }}" target="_blank">View PDF</a></p>{% endif %}
         </div>
       {% elif view == "recommended" %}
         <div class="dashboard-card">
