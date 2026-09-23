@@ -144,6 +144,60 @@ button, input, select, textarea {
   margin-bottom: 2rem;
 }
 
+.section-title-left {
+  text-align: left;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.eyebrow {
+  color: #2563eb;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.testimonial-header {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.testimonial-form {
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+}
+
+.testimonial-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.testimonial-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.testimonial-card p {
+  flex: 1;
+}
+
+.testimonial-rating {
+  color: #f59e0b;
+  letter-spacing: 0.1em;
+  font-size: 1.15rem;
+}
+
+.empty-testimonials {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -320,6 +374,8 @@ button, input, select, textarea {
   .hero-grid,
   .grid-3,
   .grid-2,
+  .testimonial-header,
+  .testimonial-list,
   .dashboard-layout {
     grid-template-columns: 1fr;
   }

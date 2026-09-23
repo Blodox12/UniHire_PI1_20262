@@ -63,21 +63,39 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section section-white">
   <div class="container">
-    <h2 class="section-title">Testimonials</h2>
-    <div class="grid-3">
-      <div class="card">
-        <p>"I landed my first internship through UniHire in less than two weeks."</p>
-        <strong>— Ana, Computer Science Student</strong>
+    <div class="testimonial-header">
+      <div>
+        <p class="eyebrow">Community feedback</p>
+        <h2 class="section-title section-title-left">Share your UniHire experience</h2>
+        <p class="text-muted">Tell future students and companies how UniHire helped you.</p>
       </div>
-      <div class="card">
-        <p>"The platform made it easy to connect with companies that fit my background."</p>
-        <strong>— Daniel, Business Student</strong>
-      </div>
-      <div class="card">
-        <p>"A professional experience that felt simple, modern, and effective."</p>
-        <strong>— Sofia, Marketing Student</strong>
+      <form method="post" class="card testimonial-form">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="message-error">{{ field.errors|join:", " }}</p>{% endif %}
+          </div>
+        {% endfor %}
+        <button class="btn btn-primary" type="submit">Publish testimonial</button>
+      </form>
+    </div>
+    <div class="testimonial-list">
+      {% for testimonial in testimonials %}
+        <article class="card testimonial-card">
+          <div class="testimonial-rating" aria-label="{{ testimonial.rating }} out of 5 stars">{% for star in "12345"|make_list %}{% if forloop.counter <= testimonial.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p>“{{ testimonial.content }}”</p>
+          <strong>{{ testimonial.name }}</strong>
+          <span class="text-muted">{{ testimonial.role }}</span>
+        </article>
+      {% empty %}
+        <div class="card empty-testimonials">
+          <p>No testimonials yet. Be the first to share your experience.</p>
+        </div>
+      {% endfor %}
       </div>
     </div>
   </div>
