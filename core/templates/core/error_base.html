@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% block error_title %}Error{% endblock %} | UniHire{% endblock %}
+
+{% block content %}
+<section class="error-page">
+  <div class="container">
+    <div class="card error-card">
+      <p class="error-code">{% block error_code %}{% endblock %}</p>
+      <h1>{% block error_heading %}{% endblock %}</h1>
+      <p class="error-text">{% block error_message %}{% endblock %}</p>
+      <div class="error-actions">
+        <a href="{% url 'core:home' %}" class="btn btn-primary">Volver al inicio</a>
+        <a href="{% url 'jobs:jobs' %}" class="btn btn-secondary">Ver vacantes</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
