@@ -1,0 +1,24 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Error del servidor | UniHire</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+<section class="error-page">
+  <div class="container">
+    <div class="card error-card">
+      <p class="error-code">500</p>
+      <h1>Algo salió mal</h1>
+      <p class="error-text">Tuvimos un problema al cargar esta página. Intenta de nuevo en unos minutos.</p>
+      <div class="error-actions">
+        <a href="/" class="btn btn-primary">Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

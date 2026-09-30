@@ -316,6 +316,46 @@ button, input, select, textarea {
   font-size: 0.9rem;
 }
 
+.error-page {
+  padding: 5rem 0;
+  background: linear-gradient(135deg, #eff6ff, #f8fafc);
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+
+.error-card {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.error-code {
+  margin: 0;
+  font-size: clamp(3.5rem, 10vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #2563eb;
+}
+
+.error-card h1 {
+  margin: 1rem 0 0.5rem;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.error-text {
+  color: #475569;
+  margin: 0 0 1.75rem;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 900px) {
   .hero-grid,
   .grid-3,
