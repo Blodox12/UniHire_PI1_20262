@@ -4,38 +4,48 @@
 
 <section class="hero">
   <div class="container hero-grid">
-    <div>
-      <h1>Find your first professional experience with UniHire.</h1>
-      <p>We match students with internships and entry-level roles based on academic background, skills, certifications, and interests.</p>
+    <div class="hero-copy">
+      <p class="eyebrow">A better start is closer than you think</p>
+      <h1>Find the work that <em>moves</em> you forward.</h1>
+      <p>UniHire connects emerging talent with internships and entry-level roles that fit their skills, ambition, and next chapter.</p>
       <div class="hero-actions">
-        <a href="{% url 'accounts:register_student' %}" class="btn btn-primary">Register</a>
-        <a href="{% url 'jobs:jobs' %}" class="btn btn-secondary">Browse Jobs</a>
+        <a href="{% url 'accounts:register_student' %}" class="btn btn-primary">Build my profile <span>↗</span></a>
+        <a href="{% url 'jobs:jobs' %}" class="btn btn-quiet">Explore opportunities</a>
       </div>
+      <div class="hero-proof"><span class="proof-avatars"><i>AM</i><i>JD</i><i>LS</i></span><span><strong>1,200+</strong> students finding their next step</span></div>
     </div>
-    <div class="card">
-      <h3>Why UniHire?</h3>
-      <ul>
-        <li>Personalized opportunities</li>
-        <li>Fast student-company matching</li>
-        <li>Professional profile and applications</li>
-      </ul>
+    <div class="hero-art" aria-label="UniHire matching workspace illustration">
+      <div class="art-orbit orbit-one"></div>
+      <div class="art-orbit orbit-two"></div>
+      <div class="match-card">
+        <div class="match-top"><span class="mini-label">TODAY'S MATCH</span><span class="match-dot">●</span></div>
+        <div class="profile-line"><div class="profile-avatar">MC</div><div><strong>María Camila</strong><span>Product Design · EAFIT</span></div></div>
+        <div class="match-score"><strong>94%</strong><span>profile match</span><div class="score-bar"><i></i></div></div>
+        <div class="match-tags"><span>UX Research</span><span>Figma</span><span>Strategy</span></div>
+      </div>
+      <div class="float-card float-role"><span class="float-icon">✦</span><div><strong>New role found</strong><span>Junior Product Designer</span></div></div>
+      <div class="float-card float-status"><span class="status-check">✓</span><div><strong>Application sent</strong><span>Just now</span></div></div>
+      <div class="art-caption">CONNECT <span>•</span> CREATE <span>•</span> GROW</div>
     </div>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <h2 class="section-title">Features</h2>
+    <div class="section-heading"><p class="eyebrow">Everything in one place</p><h2 class="section-title">Your next move, made clearer.</h2></div>
     <div class="grid-3">
-      <div class="card">
+      <div class="card feature-card">
+        <span class="feature-number">01</span>
         <h3>Smart Matching</h3>
         <p>Discover jobs aligned with your academic and technical profile.</p>
       </div>
-      <div class="card">
+      <div class="card feature-card">
+        <span class="feature-number">02</span>
         <h3>Simple Applications</h3>
         <p>Apply to internships and entry-level jobs in a few clicks.</p>
       </div>
-      <div class="card">
+      <div class="card feature-card">
+        <span class="feature-number">03</span>
         <h3>Company Tools</h3>
         <p>Post openings, manage applicants, and track hiring progress.</p>
       </div>
@@ -63,22 +73,39 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section section-white">
   <div class="container">
-    <h2 class="section-title">Testimonials</h2>
-    <div class="grid-3">
-      <div class="card">
-        <p>"I landed my first internship through UniHire in less than two weeks."</p>
-        <strong>— Ana, Computer Science Student</strong>
+    <div class="testimonial-header">
+      <div>
+        <p class="eyebrow">Community feedback</p>
+        <h2 class="section-title section-title-left">Share your UniHire experience</h2>
+        <p class="text-muted">Tell future students and companies how UniHire helped you.</p>
       </div>
-      <div class="card">
-        <p>"The platform made it easy to connect with companies that fit my background."</p>
-        <strong>— Daniel, Business Student</strong>
-      </div>
-      <div class="card">
-        <p>"A professional experience that felt simple, modern, and effective."</p>
-        <strong>— Sofia, Marketing Student</strong>
-      </div>
+      <form method="post" class="card testimonial-form">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="message-error">{{ field.errors|join:", " }}</p>{% endif %}
+          </div>
+        {% endfor %}
+        <button class="btn btn-primary" type="submit">Publish testimonial</button>
+      </form>
+    </div>
+    <div class="testimonial-list">
+      {% for testimonial in testimonials %}
+        <article class="card testimonial-card">
+          <div class="testimonial-rating" aria-label="{{ testimonial.rating }} out of 5 stars">{% for star in "12345"|make_list %}{% if forloop.counter <= testimonial.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p>“{{ testimonial.content }}”</p>
+          <strong>{{ testimonial.name }}</strong>
+          <span class="text-muted">{{ testimonial.role }}</span>
+        </article>
+      {% empty %}
+        <div class="card empty-testimonials">
+          <p>No testimonials yet. Be the first to share your experience.</p>
+        </div>
+      {% endfor %}
     </div>
   </div>
 </section>
