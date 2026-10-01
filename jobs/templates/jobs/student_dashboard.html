@@ -8,6 +8,7 @@
       <a class="tab-link {% if view == 'profile' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=profile">Profile</a>
       <a class="tab-link {% if view == 'recommended' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=recommended">Recommended Jobs</a>
       <a class="tab-link {% if view == 'applications' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=applications">My Applications</a>
+      <a class="tab-link {% if view == 'history' %}active{% endif %}" href="{% url 'jobs:student_dashboard' %}?view=history">Application History</a>
       <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">Edit Profile</a>
     </aside>
     <section>
@@ -20,7 +21,20 @@
           <p><strong>Semester:</strong> {{ student.semester }}</p>
           <p><strong>Skills:</strong> {{ student.skills|default:"Add your skills" }}</p>
           <p><strong>Certifications:</strong> {{ student.certifications|default:"Add certifications" }}</p>
-          {% if student.resume_filename %}<p><strong>Resume:</strong> <a href="{{ student.resume_filename.url }}" target="_blank">View PDF</a></p>{% endif %}
+        </div>
+        <div class="dashboard-card resume-card">
+          <h3>Your resume</h3>
+          {% if student.resume_filename %}
+            <p class="resume-current">&#128196; <a href="{{ student.resume_filename.url }}" target="_blank" rel="noopener">View current resume (PDF)</a></p>
+          {% else %}
+            <p class="empty-state">No resume yet. Upload a PDF so companies can review it when you apply.</p>
+          {% endif %}
+          <form action="{% url 'jobs:upload_resume' %}" method="post" enctype="multipart/form-data" class="resume-form">
+            {% csrf_token %}
+            <input type="file" name="resume" accept="application/pdf,.pdf" required aria-label="Resume PDF" />
+            <button type="submit" class="btn btn-primary">{% if student.resume_filename %}Replace resume{% else %}Upload resume{% endif %}</button>
+          </form>
+          <p class="text-small">PDF only, up to 5 MB.</p>
         </div>
       {% elif view == "recommended" %}
         <div class="dashboard-card">
@@ -52,6 +66,34 @@
                 </div>
               </div>
             {% endfor %}
+          {% endif %}
+        </div>
+      {% elif view == "history" %}
+        <div class="dashboard-card">
+          <h2>Application History</h2>
+          <div class="filter-chips">
+            <a class="chip {% if not history_filter %}active{% endif %}" href="?view=history">All ({{ history_counts.total }})</a>
+            <a class="chip {% if history_filter == 'Pending' %}active{% endif %}" href="?view=history&status=Pending">Pending ({{ history_counts.pending }})</a>
+            <a class="chip {% if history_filter == 'Accepted' %}active{% endif %}" href="?view=history&status=Accepted">Accepted ({{ history_counts.accepted }})</a>
+            <a class="chip {% if history_filter == 'Rejected' %}active{% endif %}" href="?view=history&status=Rejected">Rejected ({{ history_counts.rejected }})</a>
+          </div>
+          {% if not applications %}
+            <p class="empty-state">{% if history_counts.total %}No applications with this status.{% else %}You have not applied to any job yet. <a href="{% url 'jobs:jobs' %}">Browse jobs</a>{% endif %}</p>
+          {% else %}
+            <ol class="timeline">
+              {% for app in applications %}
+                <li class="timeline-item timeline-{{ app.status|lower }}">
+                  <div class="list-item-row">
+                    <div>
+                      <strong><a href="{% url 'jobs:job_detail' app.job.id %}">{{ app.job.title }}</a></strong>
+                      <span class="text-small"> &middot; {{ app.job.company.company_name }}</span>
+                      <p class="text-small">Applied {{ app.applied_at|date:"N j, Y" }}{% if app.decided_at %} &middot; Decided {{ app.decided_at|date:"N j, Y" }}{% endif %}</p>
+                    </div>
+                    <span class="badge {% if app.status == 'Pending' %}badge-pending{% elif app.status == 'Accepted' %}badge-accepted{% else %}badge-rejected{% endif %}">{{ app.status }}</span>
+                  </div>
+                </li>
+              {% endfor %}
+            </ol>
           {% endif %}
         </div>
       {% endif %}

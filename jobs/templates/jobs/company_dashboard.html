@@ -7,6 +7,7 @@
       <h3>Company Panel</h3>
       <a class="tab-link {% if view == 'jobs' %}active{% endif %}" href="{% url 'jobs:company_dashboard' %}?view=jobs">My Jobs</a>
       <a class="tab-link {% if view == 'applicants' %}active{% endif %}" href="{% url 'jobs:company_dashboard' %}?view=applicants">Applicants</a>
+      <a class="tab-link {% if view == 'history' %}active{% endif %}" href="{% url 'jobs:company_dashboard' %}?view=history">Job History</a>
       <a href="{% url 'accounts:company_profile' %}" class="btn btn-secondary" style="display: inline-block; margin-top: 1rem;">Edit Profile</a>
       <a href="{% url 'jobs:create_job' %}" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">Create Job</a>
     </aside>
@@ -46,18 +47,43 @@
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #666;">{{ app.job.title }}</p>
                     <p class="text-small">Applied: {{ app.applied_at|date:"N j, Y" }}</p>
                   </div>
-                  <form action="{% url 'jobs:update_application_status' app.id %}" method="post" style="display:flex; gap:0.5rem; align-items:center;">
-                    {% csrf_token %}
-                    <select name="status" aria-label="Status for {{ app.student.name }}">
-                      <option value="Pending" {% if app.status == "Pending" %}selected{% endif %}>Pending</option>
-                      <option value="Accepted" {% if app.status == "Accepted" %}selected{% endif %}>Accepted</option>
-                      <option value="Rejected" {% if app.status == "Rejected" %}selected{% endif %}>Rejected</option>
-                    </select>
-                    <button type="submit" class="btn btn-secondary">Update</button>
-                  </form>
+                  <div class="applicant-actions">
+                    {% if app.student.resume_filename %}<a href="{{ app.student.resume_filename.url }}" target="_blank" rel="noopener" class="btn btn-secondary">Resume (PDF)</a>{% endif %}
+                    {% if app.is_final %}
+                      <span class="badge {% if app.status == 'Accepted' %}badge-accepted{% else %}badge-rejected{% endif %}" title="Final decision, cannot be changed">&#128274; {{ app.status }}</span>
+                    {% else %}
+                      <form action="{% url 'jobs:update_application_status' app.id %}" method="post" class="decision-form" onsubmit="return confirm('The decision is final and cannot be changed later. Continue?');">
+                        {% csrf_token %}
+                        <button type="submit" name="status" value="Accepted" class="btn btn-success">Accept</button>
+                        <button type="submit" name="status" value="Rejected" class="btn btn-secondary">Reject</button>
+                      </form>
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             {% endfor %}
+          {% endif %}
+        </div>
+      {% elif view == "history" %}
+        <div class="dashboard-card">
+          <h2>Job History ({{ jobs|length }})</h2>
+          {% if not jobs %}
+            <p class="empty-state">You have not posted any job yet.</p>
+          {% else %}
+            <ol class="timeline">
+              {% for job in jobs %}
+                <li class="timeline-item">
+                  <strong><a href="{% url 'jobs:job_detail' job.id %}">{{ job.title }}</a></strong>
+                  <span class="badge">{{ job.job_type }}</span>
+                  <p class="text-small">Posted {{ job.created_at|date:"N j, Y" }} &middot; {{ job.location }}</p>
+                  <p class="text-small">{{ job.total_applicants }} applicant{{ job.total_applicants|pluralize }}:
+                    <span class="badge badge-pending">{{ job.pending_count }} pending</span>
+                    <span class="badge badge-accepted">{{ job.accepted_count }} accepted</span>
+                    <span class="badge badge-rejected">{{ job.rejected_count }} rejected</span>
+                  </p>
+                </li>
+              {% endfor %}
+            </ol>
           {% endif %}
         </div>
       {% endif %}

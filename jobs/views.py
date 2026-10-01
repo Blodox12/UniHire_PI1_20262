@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -6,7 +7,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import login_required
 from accounts.utils import current_company, current_student
 
-from .forms import JobForm
+from .forms import JobForm, ResumeForm
 from .models import Application, Job
 
 # ---------------------------------------------------------------------------
@@ -21,7 +22,6 @@ def jobs_view(request):
 
     jobs = Job.objects.select_related("company").all()
     if q:
-        from django.db.models import Q
         jobs = jobs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(required_skills__icontains=q))
     if job_type:
         jobs = jobs.filter(job_type=job_type)
@@ -125,6 +125,9 @@ def student_dashboard(request):
     recommended_jobs = []
     applications = []
 
+    history_filter = request.GET.get("status", "")
+    history_counts = {}
+
     if view == "recommended":
         skills = {item.strip().lower() for item in (student.skills or "").split(",") if item.strip()}
         applied_ids = set(Application.objects.filter(student=student).values_list("job_id", flat=True))
@@ -138,14 +141,42 @@ def student_dashboard(request):
         recommended_jobs.sort(key=lambda j: j.match_count, reverse=True)
     elif view == "applications":
         applications = Application.objects.filter(student=student).select_related("job")
+    elif view == "history":
+        all_apps = Application.objects.filter(student=student).select_related("job", "job__company")
+        history_counts = {
+            "total": all_apps.count(),
+            "pending": all_apps.filter(status="Pending").count(),
+            "accepted": all_apps.filter(status="Accepted").count(),
+            "rejected": all_apps.filter(status="Rejected").count(),
+        }
+        if history_filter in {"Pending", "Accepted", "Rejected"}:
+            all_apps = all_apps.filter(status=history_filter)
+        applications = all_apps
 
     context = {
         "student": student,
         "view": view,
         "recommended_jobs": recommended_jobs,
         "applications": applications,
+        "history_filter": history_filter,
+        "history_counts": history_counts,
+        "resume_form": ResumeForm(),
     }
     return render(request, "jobs/student_dashboard.html", context)
+
+
+@login_required(role="student")
+@require_POST
+def upload_resume(request):
+    student = current_student(request)
+    form = ResumeForm(request.POST, request.FILES)
+    if form.is_valid():
+        student.resume_filename = form.cleaned_data["resume"]
+        student.save(update_fields=["resume_filename"])
+        messages.success(request, "Resume uploaded. Companies can now see it when you apply.")
+    else:
+        messages.error(request, " ".join(form.errors["resume"]))
+    return redirect(f"{reverse('jobs:student_dashboard')}?view=profile")
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +193,13 @@ def company_dashboard(request):
     applicants = []
     if view == "applicants":
         applicants = Application.objects.select_related("job", "student").filter(job__company=company)
+    elif view == "history":
+        jobs = Job.objects.filter(company=company).annotate(
+            total_applicants=Count("applications"),
+            pending_count=Count("applications", filter=Q(applications__status="Pending")),
+            accepted_count=Count("applications", filter=Q(applications__status="Accepted")),
+            rejected_count=Count("applications", filter=Q(applications__status="Rejected")),
+        )
     else:
         jobs = Job.objects.filter(company=company)
 
@@ -182,10 +220,11 @@ def update_application_status(request, application_id):
         Application.objects.select_related("job"), id=application_id, job__company=company
     )
     status_val = request.POST.get("status")
-    if status_val not in {"Pending", "Accepted", "Rejected"}:
+    if application.is_final:
+        messages.error(request, "This application was already decided and its status cannot be changed.")
+    elif status_val not in {"Accepted", "Rejected"}:
         messages.error(request, "Invalid application status")
     else:
-        application.status = status_val
-        application.save()
-        messages.success(request, "Application status updated.")
+        application.decide(status_val)
+        messages.success(request, f"Application {status_val.lower()}.")
     return redirect(f"{reverse('jobs:company_dashboard')}?view=applicants")
