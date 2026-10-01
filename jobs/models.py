@@ -43,6 +43,12 @@ class Application(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
     applied_at = models.DateTimeField(auto_now_add=True)
     decided_at = models.DateTimeField(null=True, blank=True)
+    # Resume as it was when the student applied (later uploads don't change it)
+    resume = models.FileField(upload_to="application_resumes/", blank=True, null=True)
+    # Optional message from the company explaining the decision
+    decision_note = models.CharField(max_length=300, blank=True)
+    # False when a decision is waiting for the student to see it
+    seen_by_student = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ("student", "job")
@@ -56,11 +62,18 @@ class Application(models.Model):
         """Accepted/Rejected applications are final and can no longer change."""
         return self.status != "Pending"
 
-    def decide(self, status):
+    @property
+    def resume_file(self):
+        """The resume sent with the application (falls back to the student's current one)."""
+        return self.resume or self.student.resume_filename
+
+    def decide(self, status, note=""):
         """Set a final status once. Returns False if it was already decided."""
         if self.is_final or status not in ("Accepted", "Rejected"):
             return False
         self.status = status
         self.decided_at = timezone.now()
-        self.save(update_fields=["status", "decided_at"])
+        self.decision_note = (note or "").strip()[:300]
+        self.seen_by_student = False
+        self.save(update_fields=["status", "decided_at", "decision_note", "seen_by_student"])
         return True

@@ -1,7 +1,12 @@
+import os
+
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.core.files.base import ContentFile
+from django.core.mail import send_mail
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import login_required
@@ -53,6 +58,19 @@ def job_detail(request, job_id):
     return render(request, "jobs/job_detail.html", {"job": job, "has_applied": has_applied})
 
 
+def _attach_resume_snapshot(application, student):
+    """Copy the student's current resume into the application. Returns True if attached."""
+    if not student.resume_filename:
+        return False
+    try:
+        with student.resume_filename.open("rb") as source:
+            content = source.read()
+    except (FileNotFoundError, ValueError):
+        return False
+    application.resume.save(os.path.basename(student.resume_filename.name), ContentFile(content), save=False)
+    return True
+
+
 @require_POST
 def apply_to_job(request, job_id):
     student = current_student(request)
@@ -63,8 +81,19 @@ def apply_to_job(request, job_id):
     if Application.objects.filter(student=student, job=job).exists():
         messages.error(request, "You already applied to this job")
     else:
-        Application.objects.create(student=student, job=job, status="Pending")
+        application = Application(student=student, job=job, status="Pending")
+        has_resume = _attach_resume_snapshot(application, student)
+        application.save()
         messages.success(request, "Application submitted successfully!")
+        if not has_resume:
+            messages.warning(
+                request,
+                format_html(
+                    'You applied without a resume. <a href="{}?view=profile">Upload a PDF resume</a> '
+                    "so companies can review it in your next applications.",
+                    reverse("jobs:student_dashboard"),
+                ),
+            )
     next_url = request.POST.get("next") or "jobs:jobs"
     if next_url == "jobs:job_detail":
         return redirect("jobs:job_detail", job_id=job.id)
@@ -126,7 +155,11 @@ def student_dashboard(request):
     applications = []
 
     history_filter = request.GET.get("status", "")
+    history_q = (request.GET.get("q") or "").strip()
     history_counts = {}
+    unseen_qs = Application.objects.filter(student=student, seen_by_student=False)
+    unseen_count = unseen_qs.count()
+    unseen_ids = set(unseen_qs.values_list("id", flat=True))
 
     if view == "recommended":
         skills = {item.strip().lower() for item in (student.skills or "").split(",") if item.strip()}
@@ -151,7 +184,14 @@ def student_dashboard(request):
         }
         if history_filter in {"Pending", "Accepted", "Rejected"}:
             all_apps = all_apps.filter(status=history_filter)
+        if history_q:
+            all_apps = all_apps.filter(
+                Q(job__title__icontains=history_q) | Q(job__company__company_name__icontains=history_q)
+            )
         applications = all_apps
+
+    if view in ("applications", "history") and unseen_ids:
+        unseen_qs.update(seen_by_student=True)
 
     context = {
         "student": student,
@@ -160,7 +200,9 @@ def student_dashboard(request):
         "applications": applications,
         "history_filter": history_filter,
         "history_counts": history_counts,
-        "resume_form": ResumeForm(),
+        "history_q": history_q,
+        "unseen_ids": unseen_ids,
+        "unseen_count": unseen_count,
     }
     return render(request, "jobs/student_dashboard.html", context)
 
@@ -191,8 +233,20 @@ def company_dashboard(request):
 
     jobs = []
     applicants = []
+    applicant_jobs = []
+    job_filter = request.GET.get("job", "")
+    status_filter = request.GET.get("status", "")
     if view == "applicants":
         applicants = Application.objects.select_related("job", "student").filter(job__company=company)
+        applicant_jobs = Job.objects.filter(company=company)
+        if job_filter.isdigit():
+            applicants = applicants.filter(job_id=int(job_filter))
+        if status_filter in {"Pending", "Accepted", "Rejected"}:
+            applicants = applicants.filter(status=status_filter)
+        # Pending first, then the most recent
+        applicants = applicants.annotate(
+            order=Case(When(status="Pending", then=Value(0)), default=Value(1), output_field=IntegerField())
+        ).order_by("order", "-applied_at")
     elif view == "history":
         jobs = Job.objects.filter(company=company).annotate(
             total_applicants=Count("applications"),
@@ -208,8 +262,31 @@ def company_dashboard(request):
         "view": view,
         "jobs": jobs,
         "applicants": applicants,
+        "applicant_jobs": applicant_jobs,
+        "job_filter": job_filter,
+        "status_filter": status_filter,
     }
     return render(request, "jobs/company_dashboard.html", context)
+
+
+def _notify_student(application):
+    """Email the student about the decision (never breaks the request)."""
+    job = application.job
+    lines = [
+        f"Hi {application.student.name},",
+        "",
+        f'Your application for "{job.title}" at {job.company.company_name} was {application.status.lower()}.',
+    ]
+    if application.decision_note:
+        lines += ["", f"Message from the company: {application.decision_note}"]
+    lines += ["", "You can review your history in UniHire > Application History."]
+    send_mail(
+        f"UniHire: your application was {application.status.lower()}",
+        "\n".join(lines),
+        None,
+        [application.student.email],
+        fail_silently=True,
+    )
 
 
 @login_required(role="company")
@@ -225,6 +302,7 @@ def update_application_status(request, application_id):
     elif status_val not in {"Accepted", "Rejected"}:
         messages.error(request, "Invalid application status")
     else:
-        application.decide(status_val)
+        if application.decide(status_val, request.POST.get("decision_note", "")):
+            _notify_student(application)
         messages.success(request, f"Application {status_val.lower()}.")
     return redirect(f"{reverse('jobs:company_dashboard')}?view=applicants")

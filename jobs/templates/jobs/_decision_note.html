@@ -1,0 +1,6 @@
+{% if app.status != "Pending" %}
+  <p class="decision-note {% if app.status == 'Accepted' %}decision-accepted{% else %}decision-rejected{% endif %}">
+    Final decision{% if app.decided_at %} on {{ app.decided_at|date:"N j, Y" }}{% endif %}.
+    {% if app.decision_note %}<br />&ldquo;{{ app.decision_note }}&rdquo;{% endif %}
+  </p>
+{% endif %}

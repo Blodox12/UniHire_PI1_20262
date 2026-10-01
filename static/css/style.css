@@ -126,3 +126,17 @@ button, input, select, textarea { font: inherit; }
 .timeline-pending::before { background: #e8a34d; } .timeline-accepted::before { background: #4f8b58; } .timeline-rejected::before { background: #cf5b58; }
 .applicant-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .decision-form { display: flex; gap: .5rem; }
+
+/* Improvements: notifications, stats, filters, decision notes */
+.notif-dot { display: inline-block; min-width: 1.2rem; padding: 0 .35rem; border-radius: 999px; background: #cf5b58; color: #fff; font-size: .75rem; text-align: center; }
+.new-tag { font-weight: 700; font-size: .7rem; letter-spacing: .04em; }
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.stat-card { background: #f5f6fb; border-radius: 10px; padding: .75rem; text-align: center; border-top: 3px solid #243b80; }
+.stat-card strong { display: block; font-size: 1.5rem; } .stat-card span { font-size: .8rem; color: #666; }
+.stat-pending { border-top-color: #e8a34d; } .stat-accepted { border-top-color: #4f8b58; } .stat-rejected { border-top-color: #cf5b58; }
+.history-search, .applicant-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.history-search input[type=search] { flex: 1 1 200px; padding: .45rem .7rem; border: 1px solid #ccd; border-radius: 8px; }
+.decision-note { margin: .4rem 0 0; padding: .4rem .6rem; border-radius: 8px; font-size: .85rem; }
+.decision-accepted { background: #e7f3e9; color: #2f6b3a; } .decision-rejected { background: #fbeaea; color: #a03b39; }
+.decision-form { flex-wrap: wrap; align-items: center; }
+.decision-form input[type=text] { flex: 1 1 220px; padding: .4rem .6rem; border: 1px solid #ccd; border-radius: 8px; }
