@@ -140,3 +140,7 @@ button, input, select, textarea { font: inherit; }
 .decision-accepted { background: #e7f3e9; color: #2f6b3a; } .decision-rejected { background: #fbeaea; color: #a03b39; }
 .decision-form { flex-wrap: wrap; align-items: center; }
 .decision-form input[type=text] { flex: 1 1 220px; padding: .4rem .6rem; border: 1px solid #ccd; border-radius: 8px; }
+.applicant-filters select, .history-search select { padding: .45rem .7rem; border: 1px solid #ccd; border-radius: 8px; background: #fff; font: inherit; }
+.applicant-actions { flex: 1 1 300px; justify-content: flex-end; }
+.decision-form { width: 100%; justify-content: flex-end; }
+.decision-form input[type=text] { flex: 1 1 100%; }
