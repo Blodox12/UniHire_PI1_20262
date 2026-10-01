@@ -2,7 +2,7 @@ import re
 
 from django import forms
 
-from .models import Company
+from .models import Company, CustomUser
 from .models import StudentDocument
 
 EMAIL_RE = re.compile(r"[^\s@]+@[^\s@]+\.[^\s@]+")
@@ -30,6 +30,8 @@ EAFIT_CAREERS = [
     ]
 ]
 
+USERNAME_RE = re.compile(r"[A-Za-z0-9._-]{3,30}")
+
 SEMESTER_CHOICES = [(str(number), str(number)) for number in range(1, 10)]
 
 
@@ -37,6 +39,29 @@ def validate_pdf(upload):
     if upload and not upload.name.lower().endswith(".pdf"):
         raise forms.ValidationError("The resume must be a PDF file.")
     return upload
+
+
+class UsernameFieldMixin:
+    """Validates `username`: 3-30 chars (letters, digits, . _ -), unique ignoring case."""
+
+    def __init__(self, *args, user_id=None, **kwargs):
+        self.user_id = user_id
+        super().__init__(*args, **kwargs)
+
+    def clean_username(self):
+        username = (self.cleaned_data.get("username") or "").strip()
+        if not username:
+            return ""
+        if not USERNAME_RE.fullmatch(username):
+            raise forms.ValidationError(
+                "Username must have 3-30 characters: letters, numbers, dots, dashes or underscores."
+            )
+        taken = CustomUser.objects.filter(username__iexact=username)
+        if self.user_id:
+            taken = taken.exclude(id=self.user_id)
+        if taken.exists():
+            raise forms.ValidationError("That username is already taken.")
+        return username
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -62,8 +87,9 @@ class StudentFieldsForm(forms.Form):
     documents = MultipleFileField(required=False, label="Other documents")
 
 
-class StudentRegisterForm(StudentFieldsForm):
+class StudentRegisterForm(UsernameFieldMixin, StudentFieldsForm):
     name = forms.CharField(max_length=150)
+    username = forms.CharField(max_length=30)
     email = forms.CharField(max_length=150)
     password = forms.CharField(widget=forms.PasswordInput, min_length=1)
     university = forms.CharField(max_length=150)
@@ -82,8 +108,9 @@ class StudentRegisterForm(StudentFieldsForm):
             raise forms.ValidationError("Password must contain at least 6 characters")
         return password
 
-class CompanyRegisterForm(forms.Form):
+class CompanyRegisterForm(UsernameFieldMixin, forms.Form):
     company_name = forms.CharField(max_length=150)
+    username = forms.CharField(max_length=30)
     email = forms.CharField(max_length=150)
     password = forms.CharField(widget=forms.PasswordInput, min_length=1)
     profile_photo = forms.ImageField(required=False)
@@ -103,17 +130,19 @@ class CompanyRegisterForm(forms.Form):
 
 class LoginForm(forms.Form):
     role = forms.ChoiceField(choices=[("student", "Student"), ("company", "Company")])
-    email = forms.CharField(max_length=150)
+    identifier = forms.CharField(max_length=150, label="Email or username")
     password = forms.CharField(widget=forms.PasswordInput)
 
 
-class StudentProfileForm(StudentFieldsForm):
+class StudentProfileForm(UsernameFieldMixin, StudentFieldsForm):
     name = forms.CharField(max_length=150)
+    username = forms.CharField(max_length=30, required=False)
     university = forms.CharField(max_length=150)
     semester = forms.ChoiceField(choices=SEMESTER_CHOICES)
     skills = forms.CharField(max_length=500, required=False)
     certifications = forms.CharField(max_length=500, required=False)
 
-class CompanyProfileForm(forms.Form):
+class CompanyProfileForm(UsernameFieldMixin, forms.Form):
     company_name = forms.CharField(max_length=150, label="Company Name")
+    username = forms.CharField(max_length=30, required=False)
     profile_photo = forms.ImageField(required=False)

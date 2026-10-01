@@ -18,6 +18,15 @@ from .utils import current_student
 # ---------------------------------------------------------------------------
 
 
+def resolve_login_email(identifier):
+    """The login field accepts an email or a username; returns the email to authenticate."""
+    identifier = identifier.strip()
+    if "@" in identifier:
+        return identifier.lower()
+    user = CustomUser.objects.filter(username__iexact=identifier).first()
+    return user.email if user else identifier.lower()
+
+
 def login_view(request):
     role = request.GET.get("role", "student")
     if request.method == "POST":
@@ -25,7 +34,7 @@ def login_view(request):
         role = request.POST.get("role", "student")
         if form.is_valid():
             data = form.cleaned_data
-            email = data["email"].strip().lower()
+            email = resolve_login_email(data["identifier"])
             password = data["password"]
             user = authenticate(request, email=email, password=password)
             if not user or user.role != data["role"]:
@@ -60,6 +69,7 @@ def register_student(request):
             else:
                 user = CustomUser.objects.create_user(
                     email=email,
+                    username=data["username"],
                     password=data["password"],
                     role="student",
                 )
@@ -101,6 +111,7 @@ def register_company(request):
             else:
                 user = CustomUser.objects.create_user(
                     email=email,
+                    username=data["username"],
                     password=data["password"],
                     role="company",
                 )
@@ -131,9 +142,12 @@ def register_company(request):
 def profile_view(request):
     student = current_student(request)
     if request.method == "POST":
-        form = StudentProfileForm(request.POST, request.FILES)
+        form = StudentProfileForm(request.POST, request.FILES, user_id=student.user_id)
         if form.is_valid():
             data = form.cleaned_data
+            if data["username"] and student.user:
+                student.user.username = data["username"]
+                student.user.save(update_fields=["username"])
             student.name = data["name"]
             student.university = data["university"]
             student.career = data["career"]
@@ -151,6 +165,7 @@ def profile_view(request):
             messages.success(request, "Profile updated successfully.")
     else:
         form = StudentProfileForm(initial={
+            "username": student.user.username if student.user else "",
             "name": student.name,
             "university": student.university,
             "career": student.career,
@@ -165,8 +180,11 @@ def profile_view(request):
 def company_profile_view(request):
     company = Company.objects.filter(user_id=request.session.get("user_id")).first()
     if request.method == "POST":
-        form = CompanyProfileForm(request.POST, request.FILES)
+        form = CompanyProfileForm(request.POST, request.FILES, user_id=company.user_id)
         if form.is_valid():
+            if form.cleaned_data["username"] and company.user:
+                company.user.username = form.cleaned_data["username"]
+                company.user.save(update_fields=["username"])
             company.company_name = form.cleaned_data["company_name"]
             if form.cleaned_data.get("profile_photo"):
                 company.profile_photo = form.cleaned_data["profile_photo"]
@@ -176,6 +194,7 @@ def company_profile_view(request):
             return redirect("jobs:company_dashboard")
     else:
         form = CompanyProfileForm(initial={
+            "username": company.user.username if company.user else "",
             "company_name": company.company_name,
         })
     return render(request, "accounts/company_profile.html", {"form": form, "company": company})

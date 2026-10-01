@@ -20,7 +20,7 @@ class ApplicationFlowTests(TestCase):
         self.application = Application.objects.create(student=self.student, job=self.job)
 
     def login(self, email):
-        self.client.post(reverse("accounts:login"), {"role": "student" if email.startswith("s") else "company", "email": email, "password": "secret12"})
+        self.client.post(reverse("accounts:login"), {"role": "student" if email.startswith("s") else "company", "identifier": email, "password": "secret12"})
 
     def test_decision_is_final(self):
         self.login("c@example.com")
@@ -72,7 +72,7 @@ class ImprovementTests(TestCase):
 
     def login(self, role):
         email = "s@example.com" if role == "student" else "c@example.com"
-        self.client.post(reverse("accounts:login"), {"role": role, "email": email, "password": "secret12"})
+        self.client.post(reverse("accounts:login"), {"role": role, "identifier": email, "password": "secret12"})
 
     def test_apply_without_resume_warns_and_with_resume_snapshots(self):
         self.login("student")
