@@ -113,7 +113,10 @@ def register_company(request):
                 request.session["user_id"] = user.id
                 request.session["role"] = "company"
                 request.session["name"] = profile.company_name
-                messages.success(request, "Account created successfully.")
+                messages.success(
+                    request,
+                    "Account created. An administrator will review your company before you can publish jobs.",
+                )
                 return redirect("jobs:company_dashboard")
         else:
             messages.error(request, "Please review the highlighted fields.")
