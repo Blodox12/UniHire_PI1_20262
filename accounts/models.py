@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class CustomUserManager(BaseUserManager):
@@ -31,6 +32,8 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    # Optional alternative to the email at login; unique ignoring case.
+    username = models.CharField(max_length=30, null=True, blank=True)
     role = models.CharField(
         max_length=20,
         choices=[("student", "Student"), ("company", "Company")],
@@ -42,6 +45,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(Lower("username"), name="unique_username_ci"),
+        ]
 
     objects = CustomUserManager()
 
