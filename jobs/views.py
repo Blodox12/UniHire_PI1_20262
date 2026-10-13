@@ -9,7 +9,8 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 
-from accounts.decorators import login_required
+from accounts.decorators import approved_company_required, login_required
+from accounts.models import Company
 from accounts.utils import current_company, current_student
 
 from .forms import JobForm, ResumeForm
@@ -25,7 +26,7 @@ def jobs_view(request):
     job_type = (request.GET.get("job_type") or "").strip()
     location = (request.GET.get("location") or "").strip()
 
-    jobs = Job.objects.select_related("company").all()
+    jobs = Job.objects.select_related("company").filter(company__verification_status=Company.STATUS_APPROVED)
     if q:
         jobs = jobs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(required_skills__icontains=q))
     if job_type:
@@ -50,7 +51,9 @@ def jobs_view(request):
 
 
 def job_detail(request, job_id):
-    job = get_object_or_404(Job.objects.select_related("company"), id=job_id)
+    job = get_object_or_404(
+        Job.objects.select_related("company"), id=job_id, company__verification_status=Company.STATUS_APPROVED
+    )
     has_applied = False
     student = current_student(request)
     if student:
@@ -77,7 +80,7 @@ def apply_to_job(request, job_id):
     if not student:
         messages.error(request, "Only students can apply to jobs. Please log in as a student.")
         return redirect("accounts:login")
-    job = get_object_or_404(Job, id=job_id)
+    job = get_object_or_404(Job, id=job_id, company__verification_status=Company.STATUS_APPROVED)
     if Application.objects.filter(student=student, job=job).exists():
         messages.error(request, "You already applied to this job")
     else:
@@ -100,7 +103,7 @@ def apply_to_job(request, job_id):
     return redirect("jobs:jobs")
 
 
-@login_required(role="company")
+@approved_company_required
 def create_job(request):
     company = current_company(request)
     if request.method == "POST":
@@ -116,7 +119,7 @@ def create_job(request):
     return render(request, "jobs/job_form.html", {"form": form, "is_editing": False})
 
 
-@login_required(role="company")
+@approved_company_required
 def edit_job(request, job_id):
     company = current_company(request)
     job = get_object_or_404(Job, id=job_id, company=company)
@@ -131,7 +134,7 @@ def edit_job(request, job_id):
     return render(request, "jobs/job_form.html", {"form": form, "is_editing": True, "job": job})
 
 
-@login_required(role="company")
+@approved_company_required
 @require_POST
 def delete_job(request, job_id):
     company = current_company(request)
@@ -164,7 +167,7 @@ def student_dashboard(request):
     if view == "recommended":
         skills = {item.strip().lower() for item in (student.skills or "").split(",") if item.strip()}
         applied_ids = set(Application.objects.filter(student=student).values_list("job_id", flat=True))
-        for job in Job.objects.exclude(id__in=applied_ids):
+        for job in Job.objects.filter(company__verification_status=Company.STATUS_APPROVED).exclude(id__in=applied_ids):
             required = {item.strip().lower() for item in (job.required_skills or "").split(",") if item.strip()}
             matched = skills & required
             if matched:
@@ -236,6 +239,9 @@ def company_dashboard(request):
     applicant_jobs = []
     job_filter = request.GET.get("job", "")
     status_filter = request.GET.get("status", "")
+    if view == "applicants" and not company.is_approved:
+        messages.error(request, "Your company account is under review. You will be able to see applicants once an administrator approves it.")
+        view = "jobs"
     if view == "applicants":
         applicants = Application.objects.select_related("job", "student").filter(job__company=company)
         applicant_jobs = Job.objects.filter(company=company)
@@ -289,7 +295,7 @@ def _notify_student(application):
     )
 
 
-@login_required(role="company")
+@approved_company_required
 @require_POST
 def update_application_status(request, application_id):
     company = current_company(request)

@@ -9,9 +9,20 @@
       <a class="tab-link {% if view == 'applicants' %}active{% endif %}" href="{% url 'jobs:company_dashboard' %}?view=applicants">Applicants</a>
       <a class="tab-link {% if view == 'history' %}active{% endif %}" href="{% url 'jobs:company_dashboard' %}?view=history">Job History</a>
       <a href="{% url 'accounts:company_profile' %}" class="btn btn-secondary" style="display: inline-block; margin-top: 1rem;">Edit Profile</a>
-      <a href="{% url 'jobs:create_job' %}" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">Create Job</a>
+      {% if company.is_approved %}
+        <a href="{% url 'jobs:create_job' %}" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">Create Job</a>
+      {% endif %}
     </aside>
     <section>
+      {% if company.verification_status == "pending" %}
+        <div class="dashboard-card">
+          <p class="message-error"><strong>Your account is under review.</strong> An administrator must approve your company before you can publish jobs or see applicants.</p>
+        </div>
+      {% elif company.verification_status == "rejected" %}
+        <div class="dashboard-card">
+          <p class="message-error"><strong>Your company account was rejected.</strong>{% if company.rejection_reason %} Reason: {{ company.rejection_reason }}{% endif %}</p>
+        </div>
+      {% endif %}
       {% if view == "jobs" %}
         <div class="dashboard-card">
           <h2>My Jobs</h2>

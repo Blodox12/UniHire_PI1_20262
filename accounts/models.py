@@ -90,6 +90,15 @@ class StudentDocument(models.Model):
 
 
 class Company(models.Model):
+    STATUS_PENDING = "pending"
+    STATUS_APPROVED = "approved"
+    STATUS_REJECTED = "rejected"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_REJECTED, "Rejected"),
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -100,7 +109,25 @@ class Company(models.Model):
     company_name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
     profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
+    # New companies must be approved by an administrator before they can
+    # publish jobs or see applicants.
+    verification_status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_companies",
+        null=True,
+        blank=True,
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.company_name
+
+    @property
+    def is_approved(self):
+        return self.verification_status == self.STATUS_APPROVED
