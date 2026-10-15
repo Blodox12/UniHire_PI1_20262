@@ -9,8 +9,10 @@ button, input, select, textarea { font: inherit; }
 
 .navbar { background: rgba(245,247,242,.88); border-bottom: 1px solid rgba(23,32,51,.08); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100; }
 .nav-wrap { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
-.brand { font: 700 1.45rem 'Space Grotesk', sans-serif; color: #243b80; letter-spacing: -.04em; }
+.brand { font: 700 1.45rem 'Space Grotesk', sans-serif; color: #243b80; letter-spacing: -.04em; display: flex; align-items: center; gap: .5rem; }
+.brand-logo { height: 150px; width: auto; display: block; }
 .nav-links { display: flex; align-items: center; gap: 1rem; }
+
 
 .hero { position: relative; overflow: hidden; padding: 6.5rem 0 5.5rem; background: linear-gradient(135deg,#f5f7f2 0%,#eef0ff 52%,#f8e9dc 100%); }
 .hero::before { content: ''; position: absolute; width: 42rem; height: 42rem; right: -14rem; top: -17rem; border: 1px solid rgba(36,59,128,.13); border-radius: 50%; }
