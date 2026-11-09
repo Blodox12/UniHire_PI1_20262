@@ -149,3 +149,18 @@ button, input, select, textarea { font: inherit; }
 
 /* Job search pagination */
 .pagination { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+
+/* Usability (NFR-04): clear feedback messages, keyboard focus and layout fixes */
+.skip-link { position: absolute; left: -999px; top: .5rem; z-index: 200; padding: .6rem 1rem; border-radius: .5rem; background: #243b80; color: #fff; }
+.skip-link:focus { left: .5rem; }
+a:focus-visible, button:focus-visible, .btn:focus-visible { outline: 3px solid rgba(237,118,87,.55); outline-offset: 2px; }
+.messages { margin-top: 1rem; }
+.alert { margin: 0 0 .6rem; padding: .75rem 1rem; border-radius: .65rem; border-left: 4px solid currentColor; background: #fff; box-shadow: 0 6px 18px rgba(36,59,128,.06); }
+.alert a { text-decoration: underline; }
+.alert-success { color: #2f6b3a; background: #e7f3e9; }
+.alert-error { color: #a03b39; background: #fbeaea; }
+.alert-warning { color: #8a5a12; background: #fdf3e3; }
+.alert-info { color: #243b80; background: #edf0fa; }
+.card-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.card-header h3 { margin: 0; }
+.dashboard-card { overflow-x: auto; }
