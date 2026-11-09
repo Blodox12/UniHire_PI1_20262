@@ -29,6 +29,8 @@
         <button class="btn btn-primary" type="submit">Save Profile</button>
       </form>
     </div>
+
+    {% include "accounts/_delete_account.html" with warning="This permanently deletes your company profile, all your job postings and the applications students sent to them." %}
   </div>
 </div>
 {% endblock %}

@@ -35,6 +35,9 @@ applications).
 - Applying to jobs and tracking application status (Pending / Accepted / Rejected)
 - Company view of applicants per job posting, with status updates
 - Django admin panel for all models (Student, Company, Job, Application)
+- Account deletion from the profile page (password required): removes the
+  user, profile, uploaded files, job postings and applications. Other advanced
+  privacy compliance features are out of the MVP scope.
 
 ## Getting Started
 

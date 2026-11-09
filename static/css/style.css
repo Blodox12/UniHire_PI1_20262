@@ -172,3 +172,9 @@ a:focus-visible, button:focus-visible, .btn:focus-visible { outline: 3px solid r
 .card-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .card-header h3 { margin: 0; }
 .dashboard-card { overflow-x: auto; }
+
+/* Account deletion (NFR-12) */
+.danger-zone { border-color: rgba(207,91,88,.35); }
+.danger-zone h3 { margin-top: 0; color: #a03b39; }
+.btn-danger { background: #cf5b58; color: #fff; }
+.btn-danger:hover { background: #a03b39; }

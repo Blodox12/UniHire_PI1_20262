@@ -141,6 +141,10 @@ class StudentProfileForm(UsernameFieldMixin, StudentFieldsForm):
     skills = forms.CharField(max_length=500, required=False)
     certifications = forms.CharField(max_length=500, required=False)
 
+class DeleteAccountForm(forms.Form):
+    password = forms.CharField(widget=forms.PasswordInput, label="Confirm your password")
+
+
 class CompanyProfileForm(UsernameFieldMixin, forms.Form):
     company_name = forms.CharField(max_length=150, label="Company Name")
     username = forms.CharField(max_length=30, required=False)

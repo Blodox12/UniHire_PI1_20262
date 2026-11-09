@@ -2,11 +2,13 @@ from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.db import transaction
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 from .decorators import login_required
 from .forms import (
     CompanyRegisterForm,
     CompanyProfileForm,
+    DeleteAccountForm,
     LoginForm,
     StudentProfileForm,
     StudentRegisterForm,
@@ -208,3 +210,47 @@ def company_profile_view(request):
             "company_name": company.company_name,
         })
     return render(request, "accounts/company_profile.html", {"form": form, "company": company})
+
+
+# ---------------------------------------------------------------------------
+# Account deletion (NFR-12): users can erase their account and personal files.
+# ---------------------------------------------------------------------------
+
+
+def _uploaded_files(user):
+    """Files on disk that belong to the user and must be removed with the account."""
+    files = []
+    student = Student.objects.filter(user=user).first()
+    if student:
+        files += [student.profile_photo, student.resume_filename]
+        files += [document.file for document in student.documents.all()]
+        files += [application.resume for application in student.applications.all()]
+    company = Company.objects.filter(user=user).first()
+    if company:
+        from jobs.models import Application
+
+        files.append(company.profile_photo)
+        files += [application.resume for application in Application.objects.filter(job__company=company)]
+    return [file for file in files if file]
+
+
+@login_required()
+@require_POST
+def delete_account(request):
+    user = CustomUser.objects.filter(id=request.session.get("user_id")).first()
+    back = "accounts:company_profile" if request.session.get("role") == "company" else "accounts:profile"
+    form = DeleteAccountForm(request.POST)
+    if not user or not form.is_valid() or not user.check_password(form.cleaned_data["password"]):
+        messages.error(request, "Incorrect password. Your account was not deleted.")
+        return redirect(back)
+
+    files = _uploaded_files(user)
+    # Deleting the user cascades to the profile, documents, jobs and applications.
+    with transaction.atomic():
+        user.delete()
+    for file in files:
+        file.delete(save=False)
+
+    request.session.flush()
+    messages.success(request, "Your account and personal data were deleted.")
+    return redirect("core:home")

@@ -41,4 +41,5 @@ urlpatterns = [
     ),
     path("profile/", views.profile_view, name="profile"),
     path("company-profile/", views.company_profile_view, name="company_profile"),
+    path("account/delete/", views.delete_account, name="delete_account"),
 ]
