@@ -49,6 +49,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         constraints = [
             models.UniqueConstraint(Lower("username"), name="unique_username_ci"),
+            models.CheckConstraint(condition=models.Q(role__in=["student", "company"]), name="user_role_valid"),
         ]
 
     objects = CustomUserManager()
@@ -124,6 +125,14 @@ class Company(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(verification_status__in=["pending", "approved", "rejected"]),
+                name="company_verification_status_valid",
+            ),
+        ]
 
     def __str__(self):
         return self.company_name

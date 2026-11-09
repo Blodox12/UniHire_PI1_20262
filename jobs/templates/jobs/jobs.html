@@ -34,15 +34,27 @@
       </form>
     </div>
 
-    <p class="text-muted">Found {{ jobs|length }} job{{ jobs|length|pluralize }}</p>
+    <p class="text-muted">Found {{ total_jobs }} job{{ total_jobs|pluralize }}</p>
 
-    {% if not jobs %}
+    {% if not total_jobs %}
       <p style="color: crimson; text-align: center;">No jobs match your search. Try adjusting your filters.</p>
     {% endif %}
 
     {% for job in jobs %}
       {% include "jobs/_job_card.html" with job=job show_apply=True %}
     {% endfor %}
+
+    {% if page_obj.has_other_pages %}
+      <nav class="pagination" aria-label="Job results pages">
+        {% if page_obj.has_previous %}
+          <a class="btn btn-secondary" href="?{% if filters_query %}{{ filters_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">&larr; Previous</a>
+        {% endif %}
+        <span class="text-muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btn btn-secondary" href="?{% if filters_query %}{{ filters_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next &rarr;</a>
+        {% endif %}
+      </nav>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

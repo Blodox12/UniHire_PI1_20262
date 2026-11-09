@@ -23,13 +23,26 @@ load_dotenv(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key-change-me')
+def env_bool(name, default=False):
+    return os.getenv(name, str(default)).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def env_list(name, default=''):
+    return [item.strip() for item in os.getenv(name, default).split(',') if item.strip()]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Set DJANGO_DEBUG=False in .env when the site is deployed.
+DEBUG = env_bool('DJANGO_DEBUG', True)
 
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key-change-me')
+if not DEBUG and SECRET_KEY == 'dev-secret-key-change-me':
+    raise RuntimeError('Set DJANGO_SECRET_KEY in .env before running with DJANGO_DEBUG=False.')
+
+# Only these hosts can serve the site (previously '*', which accepts any Host header).
+ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]')
+CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
 
 # Application definition
@@ -84,8 +97,60 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # SQLite tuning for many concurrent users (NFR-08):
+        # - WAL lets readers keep working while one request writes.
+        # - IMMEDIATE transactions take the write lock up front, avoiding
+        #   "database is locked" errors when two requests write at once.
+        # - timeout makes a request wait up to 20 s for the lock instead of failing.
+        'OPTIONS': {
+            'timeout': 20,
+            'transaction_mode': 'IMMEDIATE',
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;',
+        },
     }
 }
+
+# In-process cache; sessions are read from it and only written through to the
+# database, so most requests don't hit SQLite just to load the session.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unihire-default',
+    }
+}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+
+# Logging (NFR-11): errors and warnings go to the console and to a rotating
+# file (logs/unihire.log, 5 files x 5 MB) so failures can be investigated.
+LOG_DIR = Path(os.getenv('DJANGO_LOG_DIR') or BASE_DIR / 'logs')
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {'format': '%(asctime)s %(levelname)s [%(name)s] %(message)s'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'standard'},
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'unihire.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'delay': True,
+            'formatter': 'standard',
+        },
+    },
+    'root': {'handlers': ['console', 'file'], 'level': 'WARNING'},
+    'loggers': {
+        'django': {'handlers': ['console', 'file'], 'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'), 'propagate': False},
+        'unihire': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+    },
+}
+
+# Where `python manage.py backup_db` stores the database copies (NFR-09).
+BACKUP_DIR = Path(os.getenv('DJANGO_BACKUP_DIR') or BASE_DIR / 'backups')
 
 
 # Password validation
@@ -97,6 +162,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -107,6 +173,24 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+
+# Session and cookie security (NFR-02)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 60 * 60 * 8  # log users out after 8 hours
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+
+if not DEBUG:
+    # Only send cookies over HTTPS and force HTTPS once deployed.
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = env_bool('DJANGO_SECURE_SSL_REDIRECT', True)
+    SECURE_HSTS_SECONDS = int(os.getenv('DJANGO_SECURE_HSTS_SECONDS', '3600'))
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Internationalization

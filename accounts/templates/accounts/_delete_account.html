@@ -1,0 +1,12 @@
+<div class="card form-card danger-zone">
+  <h3>Delete account</h3>
+  <p class="text-muted">{{ warning }} This cannot be undone.</p>
+  <form method="post" action="{% url 'accounts:delete_account' %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="delete-password">Confirm your password</label>
+      <input id="delete-password" type="password" name="password" required autocomplete="current-password" />
+    </div>
+    <button class="btn btn-danger" type="submit">Delete my account</button>
+  </form>
+</div>

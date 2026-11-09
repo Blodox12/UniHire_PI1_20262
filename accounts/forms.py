@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.contrib.auth.password_validation import validate_password
 
 from .models import Company, CustomUser
 from .models import StudentDocument
@@ -33,6 +34,15 @@ EAFIT_CAREERS = [
 USERNAME_RE = re.compile(r"[A-Za-z0-9._-]{3,30}")
 
 SEMESTER_CHOICES = [(str(number), str(number)) for number in range(1, 10)]
+
+
+class PasswordStrengthMixin:
+    """Runs AUTH_PASSWORD_VALIDATORS (min. 8 chars, not common, not only digits)."""
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        validate_password(password)
+        return password
 
 
 def validate_pdf(upload):
@@ -87,7 +97,7 @@ class StudentFieldsForm(forms.Form):
     documents = MultipleFileField(required=False, label="Other documents")
 
 
-class StudentRegisterForm(UsernameFieldMixin, StudentFieldsForm):
+class StudentRegisterForm(PasswordStrengthMixin, UsernameFieldMixin, StudentFieldsForm):
     name = forms.CharField(max_length=150)
     username = forms.CharField(max_length=30)
     email = forms.CharField(max_length=150)
@@ -102,13 +112,8 @@ class StudentRegisterForm(UsernameFieldMixin, StudentFieldsForm):
             raise forms.ValidationError("Invalid email")
         return email
 
-    def clean_password(self):
-        password = self.cleaned_data["password"]
-        if len(password) < 6:
-            raise forms.ValidationError("Password must contain at least 6 characters")
-        return password
 
-class CompanyRegisterForm(UsernameFieldMixin, forms.Form):
+class CompanyRegisterForm(PasswordStrengthMixin, UsernameFieldMixin, forms.Form):
     company_name = forms.CharField(max_length=150)
     username = forms.CharField(max_length=30)
     email = forms.CharField(max_length=150)
@@ -120,12 +125,6 @@ class CompanyRegisterForm(UsernameFieldMixin, forms.Form):
         if not EMAIL_RE.fullmatch(email):
             raise forms.ValidationError("Invalid email")
         return email
-
-    def clean_password(self):
-        password = self.cleaned_data["password"]
-        if len(password) < 6:
-            raise forms.ValidationError("Password must contain at least 6 characters")
-        return password
 
 
 class LoginForm(forms.Form):
@@ -141,6 +140,10 @@ class StudentProfileForm(UsernameFieldMixin, StudentFieldsForm):
     semester = forms.ChoiceField(choices=SEMESTER_CHOICES)
     skills = forms.CharField(max_length=500, required=False)
     certifications = forms.CharField(max_length=500, required=False)
+
+class DeleteAccountForm(forms.Form):
+    password = forms.CharField(widget=forms.PasswordInput, label="Confirm your password")
+
 
 class CompanyProfileForm(UsernameFieldMixin, forms.Form):
     company_name = forms.CharField(max_length=150, label="Company Name")

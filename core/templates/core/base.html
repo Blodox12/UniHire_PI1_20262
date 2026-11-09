@@ -4,10 +4,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
   <title>{% block title %}UniHire{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2" />
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3" />
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <nav class="navbar">
   <div class="container nav-wrap">
@@ -30,11 +33,11 @@
   </div>
 </nav>
 
-<main>
+<main id="main-content">
   {% if messages %}
-    <div class="container" style="margin-top: 1rem;">
+    <div class="container messages" role="status" aria-live="polite">
       {% for message in messages %}
-        <p class="{% if message.tags == 'error' %}message-error{% else %}message-success{% endif %}">{{ message }}</p>
+        <p class="alert alert-{{ message.tags|default:'info' }} {% if message.tags == 'error' %}message-error{% else %}message-success{% endif %}">{{ message }}</p>
       {% endfor %}
     </div>
   {% endif %}

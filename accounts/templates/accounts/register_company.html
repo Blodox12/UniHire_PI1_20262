@@ -29,7 +29,8 @@
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input type="password" name="password" minlength="6" required />
+          <input type="password" name="password" minlength="8" required autocomplete="new-password" />
+          <small class="text-small">At least 8 characters. Avoid common or only-numeric passwords.</small>
           {% if form.password.errors %}<p class="message-error">{{ form.password.errors|join:", " }}</p>{% endif %}
         </div>
         <div class="form-group">
