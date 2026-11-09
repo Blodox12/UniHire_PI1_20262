@@ -129,3 +129,14 @@ UniHire-Django/
 
 
 
+
+## Operations
+
+### Availability and health check
+
+`GET /health/` returns `{"status": "ok", "database": "ok"}` with HTTP 200 when
+the app can reach its database, and HTTP 503 otherwise. Point an uptime monitor
+(for example UptimeRobot) or your hosting platform's health check at this URL
+so downtime is detected and alerted on. The 99 % availability target also
+depends on the hosting provider; schedule maintenance windows outside peak
+hours.
