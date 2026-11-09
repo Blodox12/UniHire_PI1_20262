@@ -99,36 +99,60 @@ done.
 
 ## Project Structure
 
+The code is split into three Django apps. Each app owns its models, forms,
+views, URLs, templates and tests, and apps only talk to each other through
+models and the helpers in `accounts/utils.py` and `accounts/decorators.py`.
+
 ```
-UniHire-Django/
+UniHire_PI1_20262/
 ├── manage.py
 ├── requirements.txt
-├── unihire/               Django project (settings, urls, wsgi/asgi)
-├── core/                  Public pages and shared layout
-│   ├── views.py             home, about
-│   ├── context_processors.py session_user (exposes session info to all templates)
-│   ├── templates/core/      base.html (shared layout) + home.html, about.html
+├── .env.example             Environment variables (copy to .env)
+├── unihire/                 Django project (settings, urls, wsgi/asgi)
+├── core/                    Public pages, shared layout and site-wide utilities
+│   ├── views.py               home, about, health check
+│   ├── models.py              Testimonial
+│   ├── context_processors.py  session_user (exposes session info to all templates)
+│   ├── templates/             403/404/500 pages, core/base.html (shared layout),
+│   │                          core/home.html, core/about.html
 │   └── urls.py
-├── accounts/               Users, authentication and profile
-│   ├── models.py             CustomUser, Student, Company profile models
-│   ├── forms.py               Registration, login, profile forms
-│   ├── views.py                Login, logout, registration, automatic login after signup, profile
-│   ├── decorators.py           login_required(role=...)
-│   ├── utils.py                 current_student(request), current_company(request)
-│   ├── admin.py
-│   ├── templates/accounts/     login.html, register_student.html,
-│   │                            register_company.html, profile.html
+├── accounts/                Users, authentication and profiles
+│   ├── models.py              CustomUser, Student, StudentDocument, Company
+│   ├── forms.py               Registration, login and profile forms
+│   ├── views.py               Login, logout, registration, profiles
+│   ├── decorators.py          login_required(role=...), approved_company_required
+│   ├── utils.py               current_student(request), current_company(request)
+│   ├── admin.py               Includes company approval actions
+│   ├── templates/accounts/    Login, registration, profile and password reset pages
+│   ├── tests.py
 │   └── urls.py
 ├── jobs/                    Job postings and applications
-│   ├── models.py              Job, Application relations between companies and students
-│   ├── forms.py                JobForm
-│   ├── views.py                 Job search/detail/CRUD, dashboards, applications
+│   ├── models.py              Job, Application
+│   ├── forms.py               JobForm, ResumeForm
+│   ├── views.py               Job search/detail/CRUD, dashboards, applications
 │   ├── admin.py
-│   ├── templates/jobs/          jobs.html, job_detail.html, job_form.html,
-│   │                             student_dashboard.html, company_dashboard.html
+│   ├── templates/jobs/        Job list/detail/form, dashboards and partials (_*.html)
+│   ├── tests.py
 │   └── urls.py
-└── static/css/style.css     Single stylesheet shared by all apps
+└── static/                  css/style.css (single stylesheet) and img/
 ```
+
+## Development conventions
+
+- **Where code goes:** put new features in the app that owns the data. Shared
+  layout goes in `core/templates/core/base.html`; reusable template fragments
+  are partials named `_name.html`.
+- **Views stay thin:** validation lives in forms, rules about a single record
+  live in model methods (for example `Application.decide()`).
+- **Configuration:** never hard-code secrets or environment-specific values;
+  read them from `.env` in `unihire/settings.py` and list them in `.env.example`.
+- **Database changes:** after editing a model, run
+  `python manage.py makemigrations` and commit the migration with the change.
+- **Before pushing:** run `python manage.py check` and `python manage.py test`.
+- **Git:** one feature branch per change (`feature/<name>`), merged to `main`
+  through a pull request. Reference the issue in the commit message, e.g.
+  `NFR-06: ... (#19)`.
+- **Formatting:** follow `.editorconfig` (4 spaces in Python, 2 in HTML/CSS).
 
 
 
