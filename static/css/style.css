@@ -1,13 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root { font-family: 'DM Sans', sans-serif; color: #172033; background: #f5f7f2; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
-* { box-sizing: border-box; }
-body { margin: 0; background: #f5f7f2; color: #172033; }
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; background: #f5f7f2; color: #172033; -moz-osx-font-smoothing: grayscale; }
+img { max-width: 100%; height: auto; }
+select { background-color: #fff; color: inherit; }
+/* Browsers without backdrop-filter (older Firefox) get an opaque navbar instead of a see-through one */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .navbar { background: #f5f7f2; }
+  .match-card { background: #fff; }
+}
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; }
-.container { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }
+.container { width: calc(100% - 2rem); max-width: 1120px; width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }
 
-.navbar { background: rgba(245,247,242,.88); border-bottom: 1px solid rgba(23,32,51,.08); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100; }
+.navbar { background: rgba(245,247,242,.88); border-bottom: 1px solid rgba(23,32,51,.08); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100; }
 .nav-wrap { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
 .brand { font: 700 1.45rem 'Space Grotesk', sans-serif; color: #243b80; letter-spacing: -.04em; display: flex; align-items: center; gap: .5rem; }
 .brand-logo { height: 150px; width: auto; display: block; }
@@ -33,7 +41,7 @@ button, input, select, textarea { font: inherit; }
 .art-orbit { position: absolute; border: 1px solid rgba(36,59,128,.18); border-radius: 50%; transform: rotate(-18deg); }
 .orbit-one { width: 410px; height: 230px; }
 .orbit-two { width: 330px; height: 330px; border-color: rgba(237,118,87,.24); transform: rotate(32deg); }
-.match-card { position: relative; z-index: 2; width: min(350px,85%); padding: 1.35rem; border: 1px solid rgba(255,255,255,.8); border-radius: 1rem; background: rgba(255,255,255,.78); box-shadow: 0 25px 70px rgba(36,59,128,.2); backdrop-filter: blur(15px); animation: cardFloat 5s ease-in-out infinite; }
+.match-card { position: relative; z-index: 2; width: min(350px,85%); padding: 1.35rem; border: 1px solid rgba(255,255,255,.8); border-radius: 1rem; background: rgba(255,255,255,.78); box-shadow: 0 25px 70px rgba(36,59,128,.2); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); animation: cardFloat 5s ease-in-out infinite; }
 .match-top, .profile-line, .match-score { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
 .mini-label { color: #ed7657; font-size: .63rem; font-weight: 700; letter-spacing: .11em; }
 .match-dot { color: #a5c66a; font-size: .8rem; }

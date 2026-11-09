@@ -19,6 +19,9 @@ applications).
 - Hashed password storage via Django's `set_password()` / `authenticate()` workflow
 - Automatic login after successful student or company registration
 - Plain HTML templates + a single CSS file (no build step, no JS framework)
+- Supported browsers: latest versions of Chrome, Firefox, Edge and Safari. The
+  stylesheet includes `-webkit-` prefixes for Safari and fallbacks for browsers
+  without `backdrop-filter` or `min()`.
 
 ## Features
 
