@@ -61,7 +61,7 @@ class UsernameLoginTests(TestCase):
 
     def test_duplicate_username_is_rejected_ignoring_case(self):
         data = {
-            "name": "Beto", "username": "ANA.DEV", "email": "beto@example.com", "password": "secret12",
+            "name": "Beto", "username": "ANA.DEV", "email": "beto@example.com", "password": "StrongPass123",
             "university": "EAFIT", "career": "Economía", "semester": "3",
         }
         r = self.client.post(reverse("accounts:register_student"), data)

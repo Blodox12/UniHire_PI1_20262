@@ -40,6 +40,8 @@ def login_view(request):
             if not user or user.role != data["role"]:
                 messages.error(request, "User not found or invalid password")
             else:
+                # New session key on login to prevent session fixation.
+                request.session.cycle_key()
                 request.session["user_id"] = user.id
                 request.session["role"] = data["role"]
                 profile = Student.objects.filter(user=user).first() or Company.objects.filter(user=user).first()
