@@ -26,6 +26,12 @@ class Job(models.Model):
             models.Index(fields=["job_type"], name="job_type_idx"),
             models.Index(fields=["location"], name="job_location_idx"),
         ]
+        # The database rejects invalid values even if they bypass the forms (NFR-07).
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(job_type__in=["Remote", "Hybrid", "On-site"]), name="job_type_valid"
+            ),
+        ]
 
     def __str__(self):
         return self.title
@@ -63,9 +69,27 @@ class Application(models.Model):
             models.Index(fields=["status"], name="application_status_idx"),
             models.Index(fields=["student", "seen_by_student"], name="application_unseen_idx"),
         ]
+        # A decided application must have a decision date, and status must be a known value (NFR-07).
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(status__in=["Pending", "Accepted", "Rejected"]), name="application_status_valid"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status="Pending") | models.Q(decided_at__isnull=False),
+                name="application_decided_has_date",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.student} -> {self.job} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        # Keep decided_at consistent when the status is changed outside decide() (e.g. the admin).
+        if self.status != "Pending" and self.decided_at is None:
+            self.decided_at = timezone.now()
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | {"decided_at"}
+        super().save(*args, **kwargs)
 
     @property
     def is_final(self):

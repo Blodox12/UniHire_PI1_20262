@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -96,12 +97,22 @@ def apply_to_job(request, job_id):
         messages.error(request, "Only students can apply to jobs. Please log in as a student.")
         return redirect("accounts:login")
     job = get_object_or_404(Job, id=job_id, company__verification_status=Company.STATUS_APPROVED)
-    if Application.objects.filter(student=student, job=job).exists():
+    application = Application(student=student, job=job, status="Pending")
+    has_resume = False
+    duplicate = Application.objects.filter(student=student, job=job).exists()
+    if not duplicate:
+        has_resume = _attach_resume_snapshot(application, student)
+        try:
+            # The unique (student, job) constraint also catches two submits at the same time.
+            with transaction.atomic():
+                application.save()
+        except IntegrityError:
+            duplicate = True
+            if application.resume:
+                application.resume.delete(save=False)
+    if duplicate:
         messages.error(request, "You already applied to this job")
     else:
-        application = Application(student=student, job=job, status="Pending")
-        has_resume = _attach_resume_snapshot(application, student)
-        application.save()
         messages.success(request, "Application submitted successfully!")
         if not has_resume:
             messages.warning(

@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate
+from django.db import transaction
 from django.shortcuts import redirect, render
 
 from .decorators import login_required
@@ -66,30 +67,32 @@ def register_student(request):
         if form.is_valid():
             data = form.cleaned_data
             email = data["email"].strip().lower()
-            if CustomUser.objects.filter(email=email).exists():
+            if CustomUser.objects.filter(email=email).exists() or Student.objects.filter(email=email).exists():
                 messages.error(request, "User already exists")
             else:
-                user = CustomUser.objects.create_user(
-                    email=email,
-                    username=data["username"],
-                    password=data["password"],
-                    role="student",
-                )
-                profile = Student.objects.create(
-                    user=user,
-                    name=data["name"].strip(),
-                    email=email,
-                    university=data["university"].strip(),
-                    career=data["career"].strip(),
-                    semester=data["semester"],
-                    skills=data.get("skills", ""),
-                    certifications=data.get("certifications", ""),
-                    profile_photo=data.get("profile_photo"),
-                    resume_filename=data.get("resume_filename"),
-                )
-                StudentDocument.objects.bulk_create(
-                    [StudentDocument(student=profile, file=document) for document in data.get("documents", [])]
-                )
+                # User, profile and documents are saved together or not at all (NFR-07).
+                with transaction.atomic():
+                    user = CustomUser.objects.create_user(
+                        email=email,
+                        username=data["username"],
+                        password=data["password"],
+                        role="student",
+                    )
+                    profile = Student.objects.create(
+                        user=user,
+                        name=data["name"].strip(),
+                        email=email,
+                        university=data["university"].strip(),
+                        career=data["career"].strip(),
+                        semester=data["semester"],
+                        skills=data.get("skills", ""),
+                        certifications=data.get("certifications", ""),
+                        profile_photo=data.get("profile_photo"),
+                        resume_filename=data.get("resume_filename"),
+                    )
+                    StudentDocument.objects.bulk_create(
+                        [StudentDocument(student=profile, file=document) for document in data.get("documents", [])]
+                    )
                 request.session["user_id"] = user.id
                 request.session["role"] = "student"
                 request.session["name"] = profile.name
@@ -108,21 +111,23 @@ def register_company(request):
         if form.is_valid():
             data = form.cleaned_data
             email = data["email"].strip().lower()
-            if CustomUser.objects.filter(email=email).exists():
+            if CustomUser.objects.filter(email=email).exists() or Company.objects.filter(email=email).exists():
                 messages.error(request, "User already exists")
             else:
-                user = CustomUser.objects.create_user(
-                    email=email,
-                    username=data["username"],
-                    password=data["password"],
-                    role="company",
-                )
-                profile = Company.objects.create(
-                    user=user,
-                    company_name=data["company_name"].strip(),
-                    email=email,
-                    profile_photo=data.get("profile_photo"),
-                )
+                # User and company profile are saved together or not at all (NFR-07).
+                with transaction.atomic():
+                    user = CustomUser.objects.create_user(
+                        email=email,
+                        username=data["username"],
+                        password=data["password"],
+                        role="company",
+                    )
+                    profile = Company.objects.create(
+                        user=user,
+                        company_name=data["company_name"].strip(),
+                        email=email,
+                        profile_photo=data.get("profile_photo"),
+                    )
                 request.session["user_id"] = user.id
                 request.session["role"] = "company"
                 request.session["name"] = profile.company_name
