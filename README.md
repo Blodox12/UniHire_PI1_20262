@@ -167,3 +167,23 @@ the app can reach its database, and HTTP 503 otherwise. Point an uptime monitor
 so downtime is detected and alerted on. The 99 % availability target also
 depends on the hosting provider; schedule maintenance windows outside peak
 hours.
+
+### Scalability (SQLite)
+
+The project uses SQLite by requirement. To support around 200 concurrent
+users, `unihire/settings.py` enables WAL mode (reads don't block while a
+request writes), `IMMEDIATE` transactions and a 20-second lock timeout, and
+keeps sessions in a cache backed by the database. Job search is paginated and
+the filtered fields are indexed.
+
+In production, run Django behind a multi-threaded WSGI server instead of
+`runserver`, for example:
+
+```bash
+pip install waitress
+waitress-serve --threads=16 --listen=0.0.0.0:8000 unihire.wsgi:application
+```
+
+SQLite allows one writer at a time, so keep the database on the same server's
+local disk (not a network drive). WAL mode creates `db.sqlite3-wal` and
+`db.sqlite3-shm` next to the database; they are part of it and are ignored by Git.

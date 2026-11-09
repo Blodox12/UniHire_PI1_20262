@@ -97,8 +97,28 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # SQLite tuning for many concurrent users (NFR-08):
+        # - WAL lets readers keep working while one request writes.
+        # - IMMEDIATE transactions take the write lock up front, avoiding
+        #   "database is locked" errors when two requests write at once.
+        # - timeout makes a request wait up to 20 s for the lock instead of failing.
+        'OPTIONS': {
+            'timeout': 20,
+            'transaction_mode': 'IMMEDIATE',
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;',
+        },
     }
 }
+
+# In-process cache; sessions are read from it and only written through to the
+# database, so most requests don't hit SQLite just to load the session.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unihire-default',
+    }
+}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 
 # Password validation
