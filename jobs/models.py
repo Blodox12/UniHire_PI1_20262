@@ -21,6 +21,11 @@ class Job(models.Model):
 
     class Meta:
         ordering = ["-id"]
+        # Indexes for the fields used by the job search filters (NFR-01).
+        indexes = [
+            models.Index(fields=["job_type"], name="job_type_idx"),
+            models.Index(fields=["location"], name="job_location_idx"),
+        ]
 
     def __str__(self):
         return self.title
@@ -53,6 +58,11 @@ class Application(models.Model):
     class Meta:
         unique_together = ("student", "job")
         ordering = ["-id"]
+        # Dashboards filter applications by status and by unseen decisions (NFR-01).
+        indexes = [
+            models.Index(fields=["status"], name="application_status_idx"),
+            models.Index(fields=["student", "seen_by_student"], name="application_unseen_idx"),
+        ]
 
     def __str__(self):
         return f"{self.student} -> {self.job} ({self.status})"

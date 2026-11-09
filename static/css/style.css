@@ -146,3 +146,6 @@ button, input, select, textarea { font: inherit; }
 .applicant-actions { flex: 1 1 300px; justify-content: flex-end; }
 .decision-form { width: 100%; justify-content: flex-end; }
 .decision-form input[type=text] { flex: 1 1 100%; }
+
+/* Job search pagination */
+.pagination { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem; }

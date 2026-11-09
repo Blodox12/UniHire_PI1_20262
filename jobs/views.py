@@ -1,8 +1,10 @@
 import os
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -15,6 +17,8 @@ from accounts.utils import current_company, current_student
 
 from .forms import JobForm, ResumeForm
 from .models import Application, Job
+
+JOBS_PER_PAGE = 10
 
 # ---------------------------------------------------------------------------
 # Jobs (public browsing + search/filter, ported from /api/jobs/search)
@@ -34,13 +38,24 @@ def jobs_view(request):
     if location:
         jobs = jobs.filter(location__icontains=location)
 
+    # Paginate so the page only renders a bounded number of jobs (NFR-01).
+    page_obj = Paginator(jobs, JOBS_PER_PAGE).get_page(request.GET.get("page"))
+    filters = urlencode({key: value for key, value in (("q", q), ("job_type", job_type), ("location", location)) if value})
+
     applied_ids = set()
     student = current_student(request)
     if student:
-        applied_ids = set(Application.objects.filter(student=student).values_list("job_id", flat=True))
+        applied_ids = set(
+            Application.objects.filter(student=student, job_id__in=[job.id for job in page_obj]).values_list(
+                "job_id", flat=True
+            )
+        )
 
     context = {
-        "jobs": jobs,
+        "jobs": page_obj,
+        "page_obj": page_obj,
+        "total_jobs": page_obj.paginator.count,
+        "filters_query": filters,
         "applied_ids": applied_ids,
         "search": q,
         "job_type": job_type,
@@ -167,7 +182,12 @@ def student_dashboard(request):
     if view == "recommended":
         skills = {item.strip().lower() for item in (student.skills or "").split(",") if item.strip()}
         applied_ids = set(Application.objects.filter(student=student).values_list("job_id", flat=True))
-        for job in Job.objects.filter(company__verification_status=Company.STATUS_APPROVED).exclude(id__in=applied_ids):
+        candidates = (
+            Job.objects.select_related("company")
+            .filter(company__verification_status=Company.STATUS_APPROVED)
+            .exclude(id__in=applied_ids)
+        )
+        for job in candidates:
             required = {item.strip().lower() for item in (job.required_skills or "").split(",") if item.strip()}
             matched = skills & required
             if matched:
@@ -176,7 +196,7 @@ def student_dashboard(request):
                 recommended_jobs.append(job)
         recommended_jobs.sort(key=lambda j: j.match_count, reverse=True)
     elif view == "applications":
-        applications = Application.objects.filter(student=student).select_related("job")
+        applications = Application.objects.filter(student=student).select_related("job", "job__company")
     elif view == "history":
         all_apps = Application.objects.filter(student=student).select_related("job", "job__company")
         history_counts = {
