@@ -187,3 +187,29 @@ waitress-serve --threads=16 --listen=0.0.0.0:8000 unihire.wsgi:application
 SQLite allows one writer at a time, so keep the database on the same server's
 local disk (not a network drive). WAL mode creates `db.sqlite3-wal` and
 `db.sqlite3-shm` next to the database; they are part of it and are ignored by Git.
+
+### Database backups
+
+```bash
+python manage.py backup_db            # creates backups/db-YYYYMMDD-HHMMSS.sqlite3
+python manage.py backup_db --keep 30  # keep the last 30 copies (default: 7)
+```
+
+The command uses SQLite's backup API, so it is safe to run while the site is
+in use, and it checks the copy with `PRAGMA integrity_check`. Set
+`DJANGO_BACKUP_DIR` in `.env` to store copies elsewhere (ideally another
+disk). Uploaded files in `media/` are not included; copy that folder too.
+
+To run it automatically every 24 hours:
+
+- **Windows (Task Scheduler)**, replacing the path with your project folder:
+  ```powershell
+  schtasks /Create /SC DAILY /ST 03:00 /TN "UniHire DB backup" /TR "cmd /c cd /d C:\path\to\UniHire_PI1_20262 && python manage.py backup_db"
+  ```
+- **Linux/macOS (cron)**, `crontab -e`:
+  ```
+  0 3 * * * cd /path/to/UniHire_PI1_20262 && python manage.py backup_db
+  ```
+
+To restore, stop the server and replace `db.sqlite3` with a backup file
+(delete any `db.sqlite3-wal` / `db.sqlite3-shm` files first).

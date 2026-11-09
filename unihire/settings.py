@@ -120,6 +120,9 @@ CACHES = {
 }
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
+# Where `python manage.py backup_db` stores the database copies (NFR-09).
+BACKUP_DIR = Path(os.getenv('DJANGO_BACKUP_DIR') or BASE_DIR / 'backups')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
