@@ -1,3 +1,5 @@
+import logging
+
 from django.db import DatabaseError, connection
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -6,6 +8,8 @@ from django.views.decorators.http import require_GET
 
 from .forms import TestimonialForm
 from .models import Testimonial
+
+logger = logging.getLogger("unihire.core")
 
 # ---------------------------------------------------------------------------
 # Public marketing pages
@@ -48,5 +52,6 @@ def health(request):
             cursor.execute("SELECT 1")
             cursor.fetchone()
     except DatabaseError:
+        logger.exception("Health check failed: database unavailable")
         return JsonResponse({"status": "error", "database": "unavailable"}, status=503)
     return JsonResponse({"status": "ok", "database": "ok"})

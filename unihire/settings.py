@@ -120,6 +120,35 @@ CACHES = {
 }
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
+# Logging (NFR-11): errors and warnings go to the console and to a rotating
+# file (logs/unihire.log, 5 files x 5 MB) so failures can be investigated.
+LOG_DIR = Path(os.getenv('DJANGO_LOG_DIR') or BASE_DIR / 'logs')
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {'format': '%(asctime)s %(levelname)s [%(name)s] %(message)s'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'standard'},
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'unihire.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'delay': True,
+            'formatter': 'standard',
+        },
+    },
+    'root': {'handlers': ['console', 'file'], 'level': 'WARNING'},
+    'loggers': {
+        'django': {'handlers': ['console', 'file'], 'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'), 'propagate': False},
+        'unihire': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+    },
+}
+
 # Where `python manage.py backup_db` stores the database copies (NFR-09).
 BACKUP_DIR = Path(os.getenv('DJANGO_BACKUP_DIR') or BASE_DIR / 'backups')
 

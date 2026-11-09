@@ -213,3 +213,10 @@ To run it automatically every 24 hours:
 
 To restore, stop the server and replace `db.sqlite3` with a backup file
 (delete any `db.sqlite3-wal` / `db.sqlite3-shm` files first).
+
+### Error logs
+
+Errors and warnings (including unhandled exceptions behind 500 pages, failed
+decision emails and missing resume files) are written to the console and to
+`logs/unihire.log`. The file rotates at 5 MB and keeps 5 old copies. Set
+`DJANGO_LOG_DIR` or `DJANGO_LOG_LEVEL` in `.env` to change the folder or level.

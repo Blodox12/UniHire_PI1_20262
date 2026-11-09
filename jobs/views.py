@@ -1,3 +1,4 @@
+import logging
 import os
 from urllib.parse import urlencode
 
@@ -20,6 +21,8 @@ from .forms import JobForm, ResumeForm
 from .models import Application, Job
 
 JOBS_PER_PAGE = 10
+
+logger = logging.getLogger("unihire.jobs")
 
 # ---------------------------------------------------------------------------
 # Jobs (public browsing + search/filter, ported from /api/jobs/search)
@@ -85,6 +88,7 @@ def _attach_resume_snapshot(application, student):
         with student.resume_filename.open("rb") as source:
             content = source.read()
     except (FileNotFoundError, ValueError):
+        logger.warning("Resume file missing for student %s: %s", student.id, student.resume_filename.name)
         return False
     application.resume.save(os.path.basename(student.resume_filename.name), ContentFile(content), save=False)
     return True
@@ -317,13 +321,16 @@ def _notify_student(application):
     if application.decision_note:
         lines += ["", f"Message from the company: {application.decision_note}"]
     lines += ["", "You can review your history in UniHire > Application History."]
-    send_mail(
-        f"UniHire: your application was {application.status.lower()}",
-        "\n".join(lines),
-        None,
-        [application.student.email],
-        fail_silently=True,
-    )
+    try:
+        send_mail(
+            f"UniHire: your application was {application.status.lower()}",
+            "\n".join(lines),
+            None,
+            [application.student.email],
+        )
+    except Exception:
+        # The decision is already saved; record the failure instead of hiding it.
+        logger.exception("Could not email decision for application %s to %s", application.id, application.student.email)
 
 
 @approved_company_required
