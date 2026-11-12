@@ -217,6 +217,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 
-# Email: prints to the console by default; set EMAIL_BACKEND/EMAIL_* in .env for real SMTP.
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "UniHire <no-reply@unihire.local>")
+# Email (used by password reset). If EMAIL_HOST_USER is set in .env, mail is sent
+# through SMTP; otherwise it is printed to the console (handy for local testing).
+EMAIL_HOST = os.getenv("EMAIL_HOST") or "smtp.gmail.com"
+EMAIL_PORT = int(os.getenv("EMAIL_PORT") or 587)
+EMAIL_HOST_USER = (os.getenv("EMAIL_HOST_USER") or "").strip()
+# Gmail shows App Passwords with spaces ("abcd efgh ..."); strip them.
+EMAIL_HOST_PASSWORD = (os.getenv("EMAIL_HOST_PASSWORD") or "").replace(" ", "")
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+EMAIL_USE_TLS = False if EMAIL_USE_SSL else env_bool("EMAIL_USE_TLS", True)
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT") or 20)
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND") or (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST_USER
+    else "django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL") or (
+    f"UniHire <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "UniHire <no-reply@unihire.local>"
+)
+# Reset links stay valid for 1 hour.
+PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT") or 60 * 60)
