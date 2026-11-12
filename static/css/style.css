@@ -178,3 +178,23 @@ a:focus-visible, button:focus-visible, .btn:focus-visible { outline: 3px solid r
 .danger-zone h3 { margin-top: 0; color: #a03b39; }
 .btn-danger { background: #cf5b58; color: #fff; }
 .btn-danger:hover { background: #a03b39; }
+
+/* Mobile layout: keep everything inside the screen width */
+body { overflow-wrap: break-word; }
+.dashboard-layout > *, .grid-2 > *, .grid-3 > * { min-width: 0; }
+input[type=file] { max-width: 100%; }
+@media (max-width: 700px) {
+  .nav-wrap { flex-wrap: wrap; gap: .5rem; padding: .5rem 0; }
+  .brand-logo { height: 56px; }
+  .nav-links { flex-wrap: wrap; justify-content: flex-end; gap: .5rem .75rem; font-size: .9rem; }
+  .nav-links .btn { padding: .55rem .8rem; font-size: .9rem; }
+  .form-card { margin: 1.5rem auto; padding: 1rem; }
+  .page-shell, .dashboard-shell { padding: 1rem 0 2rem; }
+  .card-header, .list-item-row, .meta-row { align-items: flex-start; }
+  .applicant-actions, .decision-form { justify-content: flex-start; }
+  .pagination { flex-wrap: wrap; gap: .5rem; }
+}
+@media (max-width: 380px) {
+  .nav-wrap { justify-content: center; }
+  .nav-links { justify-content: center; }
+}
